@@ -1,0 +1,118 @@
+Passo 1: Configuração inicial
+
+    Organizar a estrutura de pastas
+
+config/ → Configurações do banco de dados, autenticação, etc.
+
+models/ → Modelos do MongoDB com Mongoose.
+
+routes/ → Arquivos de rotas.
+
+views/ → Templates Handlebars.
+
+public/ → Arquivos estáticos (CSS, JS, imagens).
+
+helpers/ → Funções auxiliares, como middleware.
+
+app.js → Arquivo principal do servidor.
+
+     Instalar dependências
+
+bash
+Copiar
+Editar
+npm init -y
+npm install express mongoose express-handlebars body-parser express-session connect-mongo passport passport-local bcryptjs connect-flash dotenv
+
+    Configurar servidor Express
+
+Criar o arquivo app.js e configurar as dependências.
+
+Configurar Body-Parser, Session, Middlewares e Handlebars.
+
+Criar e conectar ao banco de dados MongoDB.
+
+     Criar arquivo de rotas
+
+Criar routes/admin.js, routes/usuarios.js e routes/index.js.
+
+Configurar as rotas principais.
+
+Passo 2: Configuração do banco de dados
+
+     Criar banco de dados no MongoDB
+
+Criar a conexão com MongoDB no arquivo config/db.js.
+
+Configurar Mongoose para lidar com promessas e erros.
+
+    Criar modelos (Schemas) com Mongoose
+
+Criar models/Usuario.js (Usuários).
+
+Criar models/Evento.js (Eventos do sistema).
+
+Criar models/Categoria.js (Categorias de eventos).
+
+Passo 3: Criar estrutura do projeto
+
+    Criar layouts e views Handlebars
+
+Criar views/layouts/main.handlebars (Layout principal).
+
+Criar páginas para login, cadastro, dashboard e administração.
+
+    --Login
+
+        Formulário para inserir e-mail e senha.
+        Mensagens de erro em caso de login inválido.
+        Link para a página de cadastro.
+
+    --Cadastro
+
+        Formulário para nome, e-mail, senha e confirmação de senha.
+        Validação dos campos antes do envio.
+        Mensagens de erro se houver problemas no cadastro.
+        Redirecionamento para o login após sucesso.
+
+    --Dashboard
+
+        Exibição de eventos cadastrados pelo usuário.
+        Botão para criar novos eventos.
+        Opção para editar ou excluir eventos -> Editar pra User e ADM
+        - Menos elementos de Edit pra User e Inline Page
+        - Todos os elementos de pra ADM e uma pagina separada pra edit
+        --Informações do Perfil:
+		Nome, email, foto de perfil (se houver).
+		opções para editar ou atualizar o perfil.
+		
+		--Eventos:
+		Listagem de eventos aos quais o usuário se inscreveu ou criou.
+		Opções para visualizar mais detalhes, editar ou cancelar inscrição.
+		
+		--Notificações:
+		Informações sobre atualizações de eventos, mensagens do administrador ou outros alertas importantes.
+		
+		--Histórico de Participação:
+		Histórico de eventos passados que o usuário participou, com detalhes sobre o evento (data, título, etc.).
+		
+		--Configurações:
+		Opções de configurações da conta (senha, preferências, etc.).
+        
+        Barra de navegação para acessar outras páginas.
+
+    --Administração
+
+        Gerenciamento de usuários (listar, ativar/desativar).
+        Controle de eventos cadastrados no sistema.
+        Restrição de acesso apenas para administradores.
+
+    Criar rotas para autenticação e CRUD
+
+Criar rotas para cadastro/login com Passport.
+
+Criar rotas para gerenciar eventos (CRUD).
+
+    Criar Middlewares de autenticação
+
+Criar helpers/eAdmin.js para proteger rotas administrativas.
