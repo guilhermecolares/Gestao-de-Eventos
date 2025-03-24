@@ -6,13 +6,13 @@
     import session from 'express-session'
     import flash from 'connect-flash'
     import passport from 'passport'
-    import auth from './config/auth.js'
+    //import auth from './config/auth.js'
     import { engine } from 'express-handlebars'
     import Handlebars from 'handlebars'
 
     // CONFIGS DE BIBLIOTECAS
     const app = express()
-    auth(passport)
+    //auth(passport)
 
     // PATH
         import path from 'path'
@@ -20,19 +20,11 @@
         const __filename = fileURLToPath(import.meta.url)
         const __dirname = path.dirname(__filename)
 
-    // MONGOOSE
-        mongoose.connect('mongodb://localhost/eventos').then(() => {
-            console.log('Conectado ao Banco de Dados (MongoDB)')
-        }).catch((err) => {
-            console.log(`Houve um erro ao se conectar ao banco de dados: ${err}`)
-        })
-
     // SESSION
         app.use((session({
             secret: '44792',
             resave: true,
             saveUninitialized: true,
-            cookie: { secure: false }
         })))
 
         app.use(passport.initialize())
@@ -66,6 +58,13 @@
     // PUBLIC
         app.use(express.static(path.join(__dirname, 'public')))
 
+    // MONGOOSE
+    mongoose.connect('mongodb://localhost/eventos').then(() => {
+        console.log('Conectado ao Banco de Dados (MongoDB)')
+    }).catch((err) => {
+        console.log(`Houve um erro ao se conectar ao banco de dados: ${err}`)
+    })
+
 // ROTAS
 
     // MODELS
@@ -73,14 +72,15 @@
     // ROUTES
         import admin from './routes/admin.js'
         import usuarios from './routes/usuario.js'
+
         app.use('/admin', admin)
-        app.use('/usuarios', usuarios)
+        app.use('/usuario', usuarios)
 
         
 
 
 // OUTROS
-    const PORT = 9092
+    const PORT = 9091
     app.listen(PORT, () => {
         console.log(`Servidor rodando na porta ${PORT}`)
     })
