@@ -33,9 +33,11 @@
     "libphonenumber-js": "^1.12.6",
     "moment": "^2.30.1",
     "mongoose": "^8.12.1",
+    "nodemailer": "^6.10.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "slugify": "^1.6.6",
-    "telefone": "^1.2.5"
+    "telefone": "^1.2.5",
+    "uuid": "^11.1.0"
   }
 }

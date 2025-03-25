@@ -6,9 +6,44 @@ import passport from 'passport'
 import { cpf } from 'cpf-cnpj-validator'
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { parse, isValid } from 'date-fns'
+import nodemailer from 'nodemailer'
+import { v4 as uuidv4 } from 'uuid'
+import Dotenv from 'dotenv'
+import { clampWithOptions } from 'date-fns/fp'
 
 const router = express.Router()
 const Usuarios = mongoose.model('usuarios')
+
+Dotenv.config()
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+}
+})
+
+const gerarTokenVerif = (email, token, req, res) => {
+    const opçoesEmail = {
+        from: 'scrgui01@gmail.com',
+        to: req.session.usuarioEmail,
+        subject: 'Codigo de Verificação de Email',
+        text: `Seu codigo de verificação de email é: ${token}`
+    }
+
+    transporter.sendMail(opçoesEmail, (error, info) => {
+        if (error) {
+            console.error(error)
+            req.flash('error_msg', 'Erro ao enviar email, tente novamente!')
+            return res.redirect('/usuarios/verificacao')
+        } else {
+            console.log(`Email enviado: ${info.response} ${info.envelope}`)
+            req.flash('success_msg', 'Email enviado com sucesso!')
+            return res.redirect('/usuarios/verificacao')
+        }
+    })
+}
 
 router.get('/registro', (req, res) => {
     res.render('usuarios/registro')
@@ -75,6 +110,8 @@ router.post('/registro', async (req, res) => {
             res.redirect('/usuarios/registro/pessoal')
         }
 
+        req.session.usuarioEmail = email
+
         const novoUsuario = new Usuarios({
             nomeDeUsuario,
             email,
@@ -128,40 +165,36 @@ router.post('/registro/pessoal', async (req, res) => {
         erros.push({ texto: 'Sobrenome muito longo! (20 caracteres ou menos)' })
     }
 
-    // VALIDAÇÕES PARA O CAMPO TELEFONE
+    // VALIDAÇÃO MULTIPLA
 
-    try {
-        const telefoneExistente = await Usuarios.findOne({ telefone })
-
-        if (telefoneExistente) {
-            erros.push({ texto: 'Telefone já cadastrado!' })
+    const verifExistencia = async (campo, valor, erroMSG) => {
+        try {
+            const existe = await Usuarios.findOne({ [campo]: valor })
+            if (existe) {
+                return erros.push({ texto: erroMSG })
+            }
+        } catch (err) {
+            console.log(err)
+            return req.flash('error_msg', 'Erro ao validar cadastro, tente novamente!')
         }
-    } catch (err) {
-        console.log(err)
-        req.flash('error_msg', 'Erro ao validar telefone, tente novamente!')
     }
+
+    // VALIDAÇÕES PARA O CAMPO TELEFONE
 
     const numeroTelefone = parsePhoneNumberFromString(telefone, 'BR')
 
     if (!numeroTelefone || !numeroTelefone.isValid()) {
         erros.push({ texto: 'Telefone inválido!' })
+    } else {
+        await verifExistencia('telefone', numeroTelefone.number, 'Telefone ja cadastrado!')
     }
 
     // VALIDAÇÕES PARA O CAMPO CPF
-    
-    try {
-        const cpfExistente = await Usuarios.findOne({ cpf })
-
-        if (cpfExistente) {
-            erros.push({ texto: 'CPF já cadastrado!' })
-        }
-    } catch (err) {
-        console.log(err)
-        req.flash('error_msg', 'Erro ao validar CPF, tente novamente!')
-    }
 
     if (!cpf.isValid(cpf)) {
         erros.push({ texto: 'CPF inválido!' })
+    } else {
+        await verifExistencia('cpf', cpf, 'CPF ja cadastrado!')
     }
 
     // VALIDAÇÕES PARA O CAMPO DATA DE NASCIMENTO
@@ -175,6 +208,68 @@ router.post('/registro/pessoal', async (req, res) => {
     if (!isValid(dataFormatada)) {
         erros.push({ texto: 'Data de Nascimento inválida!' })
     }
+
+    if (erros.length > 0) {
+        return res.render('usuarios/registro-pessoal', { erros, nome, sobrenome, telefone, cpf, dataDeNascimento })
+    }
+
+    const usuario = await Usuarios.findOne({ email: req.session.usuarioEmail })
+
+    if (!usuario) {
+        req.flash('error_msg', 'Usuario não encontrado, tente novamente!')
+        return res.redirect('/usuarios/registro')
+    }
+
+    const codigoDeVerif = uuidv4()
+
+    usuario.nome = nome
+    usuario.sobrenome = sobrenome
+    usuario.telefone = telefone
+    usuario.cpf = cpf
+    usuario.dataDeNascimento = dataDeNascimento
+    usuario.codigoDeVerif = codigoDeVerif
+
+    await usuario.save()
+
+    gerarTokenVerif(req.session.email, codigoDeVerif, req, res)
+
+    req.flash('success_msg', 'Informações cadastradas com sucesso! Verifique seu email para finalizar o cadastro!')
+    res.redirect('/usuarios/registro/verificacao')
 })
+
+router.get('/registro/verificacao', async (req, res) => {
+    res.render('usuarios/verificacao')
+})
+
+router.post('/registro/verificacao', async (req, res) => {
+    const { codigoDeVerificaçãoDeEmail } = req.body
+
+    let erros = []
+
+    try {
+        const usuario = await Usuarios.findOne({ email: req.session.usuarioEmail })
+
+        if (!usuario) {
+            req.flash('error_msg', 'Usuario não encontrado, tente novamente!')
+            return res.redirect('/usuarios/registro')
+        }
+
+        if (codigoDeVerificaçãoDeEmail !== usuario.codigoDeVerif) {
+            erros.push({ texto: 'Codigo de Verificação de Email inválido!' })
+            return res.render('usuarios/verificacao', { erros })
+        }
+        
+        usuario.statusDeCadastro = 'completo'
+        await usuario.save()
+
+        req.flash('success_msg', 'Cadastro concluido com sucesso!')
+        return res.redirect('/usuarios/login')
+    } catch (err) {
+        console.log(err)
+        req.flash('error_msg', 'Erro ao verificar email, tente novamente!')
+        return res.redirect('/usuarios/registro/verificacao')
+    }
+})
+
 
 export default router

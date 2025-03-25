@@ -48,6 +48,10 @@ const Usuario = new Schema({
     statusDeCadastro: {
         type: String,
         default: 'incompleto'
+    },
+    codigoDeVerificaçãoDeEmail: {
+        type: String,
+        required: true
     }
 })
 
