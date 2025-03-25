@@ -13,7 +13,6 @@
 
     // CONFIGS DE BIBLIOTECAS
     const app = express()
-    auth(passport)
 
     // PATH
         import path from 'path'

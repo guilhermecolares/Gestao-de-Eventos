@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { parseISO } from "date-fns";
 const Schema = mongoose.Schema;
 
 const Usuario = new Schema({
@@ -28,11 +29,13 @@ const Usuario = new Schema({
     },
     telefone: {
         type: String,
-        required: true
+        required: false,
+        match: [/^\d{11}$/, 'O telefone deve ter 11 dígitos']
     },
     cpf: {
         type: String,
-        required: true
+        required: true,
+        match: [/^\d{11}$/, 'O CPF deve ter 11 dígitos']
     },
     dataDeNascimento: {
         type: Date,
@@ -41,6 +44,10 @@ const Usuario = new Schema({
     eAdmin: {
         type: Number,
         default: 0
+    },
+    statusDeCadastro: {
+        type: String,
+        default: 'incompleto'
     }
 })
 
@@ -54,4 +61,10 @@ Usuario.pre('save', async function(next) {
     }
 })
 
-export default mongoose.model('usuario', Usuario)
+Usuario.pre('save', function(next) {
+    if(!this.isModified('dataDeNascimento')) return next()
+    this.dataDeNascimento = parseISO(this.dataDeNascimento)
+    next()
+})
+
+export default mongoose.model('usuarios', Usuario)

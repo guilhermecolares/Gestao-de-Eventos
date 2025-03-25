@@ -17,8 +17,7 @@ passport.use(new localAuth({
             return done(null, false, {message: 'Essa conta não existe!'})
         }
 
-        const senhaCorreta = await bcrypt.
-        compare(senha, usuarioConta.senha)
+        const senhaCorreta = await bcrypt.compare(senha, usuarioConta.senha)
 
         if(!senhaCorreta) {
             return done(null, false,
@@ -37,7 +36,7 @@ passport.serializeUser((usuario, done) => {
     done(null, usuario.id)
 })
 
-passport.deserializerUser(async (id, done) =>{
+passport.deserializeUser(async (id, done) => {
     try {
         const usuario = await Usuarios.findById(id)
         done(null, usuario)
@@ -45,3 +44,5 @@ passport.deserializerUser(async (id, done) =>{
         done(err)
     }
 })
+
+export default passport
