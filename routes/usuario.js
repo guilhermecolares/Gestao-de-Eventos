@@ -11,4 +11,17 @@ router.get('/registro', (req, res) => {
     //res.render('usuarios/registro')
 })
 
+router.post('/registro', (req, res) => {
+
+})
+
+router.get('/registro/pessoal', (req, res) => {
+    res.send('Página de Registro Pessoal')
+    //res.render('usuarios/registro-pessoal')
+})
+
+router.post('/registro/pessoal', (req, res) => {
+
+})
+
 export default router
