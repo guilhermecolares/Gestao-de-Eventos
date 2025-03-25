@@ -6,13 +6,14 @@
     import session from 'express-session'
     import flash from 'connect-flash'
     import passport from 'passport'
-    //import auth from './config/auth.js'
+    import auth from './config/auth.js'
     import { engine } from 'express-handlebars'
     import Handlebars from 'handlebars'
+    import conectarDB from './config/db.js'
 
     // CONFIGS DE BIBLIOTECAS
     const app = express()
-    //auth(passport)
+    auth(passport)
 
     // PATH
         import path from 'path'
@@ -41,6 +42,13 @@
             next()
         })
 
+    // MIDDLEWARES DE LOGS
+        app.use((req, res, next) => {
+            const agora = new Date().toISOString()
+            console.log(`${agora} ${req.method} ${req.url}`)
+            next()
+        })
+
     // HANDLEBARS
         app.engine('handlebars', engine({ 
             defaultLayout: 'main',
@@ -59,11 +67,9 @@
         app.use(express.static(path.join(__dirname, 'public')))
 
     // MONGOOSE
-    mongoose.connect('mongodb://localhost/eventos').then(() => {
-        console.log('Conectado ao Banco de Dados (MongoDB)')
-    }).catch((err) => {
-        console.log(`Houve um erro ao se conectar ao banco de dados: ${err}`)
-    })
+    
+
+    conectarDB()
 
 // ROTAS
 
@@ -72,12 +78,11 @@
     // ROUTES
         import admin from './routes/admin.js'
         import usuarios from './routes/usuario.js'
+        import index from './routes/index.js'
 
         app.use('/admin', admin)
         app.use('/usuario', usuarios)
-
-        
-
+        app.use('/', index)
 
 // OUTROS
     const PORT = 9091

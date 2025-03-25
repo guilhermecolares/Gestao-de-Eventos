@@ -1,118 +1,115 @@
-Passo 1: Configuração inicial
+Configurar o servidor Express (Antes de criar rotas)
 
-    Organizar a estrutura de pastas
+Criar app.js e configurar:
 
-config/ → Configurações do banco de dados, autenticação, etc.
+Express
 
-models/ → Modelos do MongoDB com Mongoose.
+Body-parser
 
-routes/ → Arquivos de rotas.
+Sessions
 
-views/ → Templates Handlebars.
+Middleware
 
-public/ → Arquivos estáticos (CSS, JS, imagens).
+Handlebars (Mas sem criar views ainda, para evitar dependência prematura.)
 
-helpers/ → Funções auxiliares, como middleware.
+Criar conexão com o MongoDB
 
-app.js → Arquivo principal do servidor.
+Criar config/db.js e configurar o Mongoose.
 
-     Instalar dependências
+Configurar o uso de variáveis de ambiente (dotenv).
 
-bash
-Copiar
-Editar
-npm init -y
-npm install express mongoose express-handlebars body-parser express-session connect-mongo passport passport-local bcryptjs connect-flash dotenv
+    🔹 Passo 2: Criar Modelos e Rotas Básicas
+    Criar os modelos do banco de dados (Antes das rotas, para evitar erro de referência)
 
-    Configurar servidor Express
+Criar os Schemas em models/:
+Usuario.js
+Evento.js
+Categoria.js
 
-Criar o arquivo app.js e configurar as dependências.
+Criar rotas básicas (Agora faz sentido criar as rotas)
 
-Configurar Body-Parser, Session, Middlewares e Handlebars.
+Criar arquivos:
+routes/admin.js
+routes/usuarios.js
+routes/index.js
 
-Criar e conectar ao banco de dados MongoDB.
+Configurar as rotas iniciais em app.js.
 
-     Criar arquivo de rotas
+Criar Middlewares básicos (Autenticação ainda pode esperar)
+Criar um middleware simples de log para debug:
 
-Criar routes/admin.js, routes/usuarios.js e routes/index.js.
+javascript
+Copiar código
+app.use((req, res, next) => {
+    console.log(`🔍 [${req.method}] ${req.url}`)
+    next()
+})
 
-Configurar as rotas principais.
+    🔹 Passo 3: Criar Sistema de Autenticação
+    Configurar Passport.js
 
-Passo 2: Configuração do banco de dados
+Criar config/auth.js e configurar passport-local.
+Criar autenticação de login e registro.
+Implementar bcryptjs para senhas.
+Criar rotas de autenticação (routes/usuarios.js)
 
-     Criar banco de dados no MongoDB
+Cadastro (/registro)
+Login (/login)
+Logout (/logout)
 
-Criar a conexão com MongoDB no arquivo config/db.js.
+Criar o middleware de autenticação (helpers/eAdmin.js)
 
-Configurar Mongoose para lidar com promessas e erros.
+Garantir que apenas admins podem acessar certas rotas.
 
-    Criar modelos (Schemas) com Mongoose
+    🔹 Passo 4: Criar Estrutura de Views
+    Configurar Handlebars
 
-Criar models/Usuario.js (Usuários).
+Criar views/layouts/main.handlebars.
 
-Criar models/Evento.js (Eventos do sistema).
+Criar views principais:
+Login (views/usuarios/login.handlebars)
+Cadastro (views/usuarios/registro.handlebars)
+Dashboard (views/usuarios/dashboard.handlebars)
 
-Criar models/Categoria.js (Categorias de eventos).
+Criar navegação e mensagens flash
 
-Passo 3: Criar estrutura do projeto
+Implementar connect-flash para exibir mensagens de erro/sucesso.
 
-    Criar layouts e views Handlebars
+    🔹 Passo 5: Implementar CRUD de Eventos
+    Criar rotas para gerenciar eventos (routes/eventos.js)
 
-Criar views/layouts/main.handlebars (Layout principal).
+Criar (/eventos/novo)
+Editar (/eventos/editar/:id)
+Deletar (/eventos/deletar/:id)
+Listar (/eventos/)
 
-Criar páginas para login, cadastro, dashboard e administração.
+Criar as views para os eventos
+Formulário de criação/edição.
+Página de listagem.
 
-    --Login
+    🔹 Passo 6: Finalizar Admin Panel e Refinamentos
+    Criar painel administrativo
 
-        Formulário para inserir e-mail e senha.
-        Mensagens de erro em caso de login inválido.
-        Link para a página de cadastro.
+Gerenciamento de usuários.
+Controle de eventos.
+Finalizar validações e melhorias
+Melhorar mensagens de erro.
+Adicionar middleware para verificar permissão de usuário/admin.
 
-    --Cadastro
+Melhorar estilos e responsividade.
 
-        Formulário para nome, e-mail, senha e confirmação de senha.
-        Validação dos campos antes do envio.
-        Mensagens de erro se houver problemas no cadastro.
-        Redirecionamento para o login após sucesso.
+📌 Resumo da Ordem Corrigida
+1️⃣ Configuração inicial → Estrutura de pastas, instalação de pacotes, configuração do Express e Handlebars.
+2️⃣ Banco de dados → Criar conexão com MongoDB e os modelos (Schemas).
+3️⃣ Rotas básicas → Criar as primeiras rotas (index.js, usuarios.js, admin.js).
+4️⃣ Autenticação → Configurar Passport e middleware eAdmin.js.
+5️⃣ Views e templates → Criar layout e páginas básicas.
+6️⃣ CRUD de eventos → Criar rotas, views e funções de eventos.
+7️⃣ Admin Panel e refinamentos → Melhorar a interface e segurança.
 
-    --Dashboard
+🚀 Conclusão
+A sua ordem já estava boa, mas essa otimização: ✅ Reduz retrabalho.
+✅ Evita erros de dependência.
+✅ Mantém um fluxo lógico de desenvolvimento.
 
-        Exibição de eventos cadastrados pelo usuário.
-        Botão para criar novos eventos.
-        Opção para editar ou excluir eventos -> Editar pra User e ADM
-        - Menos elementos de Edit pra User e Inline Page
-        - Todos os elementos de pra ADM e uma pagina separada pra edit
-        --Informações do Perfil:
-		Nome, email, foto de perfil (se houver).
-		opções para editar ou atualizar o perfil.
-		
-		--Eventos:
-		Listagem de eventos aos quais o usuário se inscreveu ou criou.
-		Opções para visualizar mais detalhes, editar ou cancelar inscrição.
-		
-		--Notificações:
-		Informações sobre atualizações de eventos, mensagens do administrador ou outros alertas importantes.
-		
-		--Histórico de Participação:
-		Histórico de eventos passados que o usuário participou, com detalhes sobre o evento (data, título, etc.).
-		
-		--Configurações:
-		Opções de configurações da conta (senha, preferências, etc.).
-        
-        Barra de navegação para acessar outras páginas.
-
-    --Administração
-
-        Gerenciamento de usuários (listar, ativar/desativar).
-        Controle de eventos cadastrados no sistema.
-        Restrição de acesso apenas para administradores.
-
-    Criar rotas para autenticação e CRUD
-
-Criar rotas para cadastro/login com Passport.
-
-Criar rotas para gerenciar eventos (CRUD).
-
-    Criar Middlewares de autenticação
-
-Criar helpers/eAdmin.js para proteger rotas administrativas.
+Se precisar de mais alguma coisa, só chamar! 😃
