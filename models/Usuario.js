@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 const Schema = mongoose.Schema;
 
 const Usuario = new Schema({
-    nome: {
+    nomeDeUsuario: {
         type: String,
         required: true
     },
@@ -15,6 +15,27 @@ const Usuario = new Schema({
     },
     senha: {
         type: String,
+        required: true,
+        match: [/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/, 'A senha deve ter pelo menos 6 caracteres, uma letra maiúscula, um número e um caractere especial (@$!%*?&)!']
+    },
+    nome: {
+        type: String,
+        required: true
+    },
+    sobrenome: {
+        type: String,
+        required: true
+    },
+    telefone: {
+        type: String,
+        required: true
+    },
+    cpf: {
+        type: String,
+        required: true
+    },
+    dataDeNascimento: {
+        type: Date,
         required: true
     },
     eAdmin: {
