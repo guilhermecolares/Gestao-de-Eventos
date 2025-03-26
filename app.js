@@ -10,6 +10,8 @@
     import { engine } from 'express-handlebars'
     import Handlebars from 'handlebars'
     import conectarDB from './config/db.js'
+    import indexRotas from './routes/index.js'
+    import usuario from './routes/usuario.js'
 
     // CONFIGS DE BIBLIOTECAS
     const app = express()
@@ -71,17 +73,9 @@
     conectarDB()
 
 // ROTAS
-
-    // MODELS
         
     // ROUTES
-        import admin from './routes/admin.js'
-        import usuarios from './routes/usuario.js'
-        import index from './routes/index.js'
-
-        app.use('/admin', admin)
-        app.use('/usuario', usuarios)
-        app.use('/', index)
+        app.use('/', indexRotas)
 
 // OUTROS
     const PORT = 9091

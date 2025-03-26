@@ -1,10 +1,18 @@
 import express from "express";
 import mongoose from "mongoose";
+import admin from './admin.js'
+import usuario from './usuario.js'
+
+const app = express();
+
 
 const router = express.Router();
 
-router.get('/', (req, res) =>{
-    res.render('/dashboard')
-})
+router.use('/admin', admin)
+router.use('/usuario', usuario)
 
-export default router
+router.get('/', (req, res) => {
+    res.render('dashboard');
+});
+
+export default router;

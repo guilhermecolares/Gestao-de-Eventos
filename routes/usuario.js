@@ -47,7 +47,7 @@ const gerarTokenVerif = (email, token, req, res) => {
 
 router.get('/registro', (req, res) => {
     res.render('usuarios/registro')
-})
+  })
 
 router.post('/registro', async (req, res) => {
     const { nomeDeUsuario, email, senha, senha2 } = req.body

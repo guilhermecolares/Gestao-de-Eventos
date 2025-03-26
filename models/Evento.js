@@ -20,6 +20,10 @@ const Evento = new Schema({
         type: Date,
         required: true
     },
+    preço: {
+        type: Number,
+        required: false
+    },
     local: {
         type: String,
         required: true
