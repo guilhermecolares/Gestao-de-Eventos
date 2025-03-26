@@ -271,5 +271,46 @@ router.post('/registro/verificacao', async (req, res) => {
     }
 })
 
+router.get('/login', (req, res) => {
+    res.render('usuarios/login')
+})
+
+router.post('/login', async (req, res, next) => {
+    const { email, senha } = req.body
+
+    passport.authenticate('local', async(err, usuario, info) => {
+        if (err) {
+            return next(err)
+        }
+        if (!usuario) {
+            req.flash('error_msg', 'Email ou senha incorretos!')
+            return res.redirect('/usuarios/login')
+        }
+
+        if (usuario.statusDeCadastro === 'incompleto') {
+            req.flash('error_msg', 'Finalize seu cadastro!')
+            return res.redirect('/usuarios/registro/pessoal')
+        }
+
+        req.login(usuario, (err) => {
+            if (err) {
+                return next(err)
+            }
+            req.flash('success_msg', 'Logado com sucesso!')
+            return res.redirect('/')
+        })
+    })(req, res, next)
+})
+
+router.get('/logout', (req, res) => {
+    req.logout((err) => {
+        if (err) {
+            return next(err)
+        }
+        req.flash('success_msg', 'Deslogado com sucesso!')
+        res.redirect('/')
+    })
+})
+
 
 export default router
