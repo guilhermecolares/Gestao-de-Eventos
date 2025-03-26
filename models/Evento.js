@@ -20,7 +20,7 @@ const Evento = new Schema({
         type: Date,
         required: true
     },
-    preço: {
+    preco: {
         type: Number,
         required: false
     },
@@ -40,6 +40,11 @@ const Evento = new Schema({
     imagem: {
         type: String,
     },
+    criador: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'usuarios',
+        required: true
+    },
     criadoEm: {
         type: Date,
         default: Date.now
@@ -49,6 +54,14 @@ const Evento = new Schema({
         default: Date.now
     }
 })
+
+EventoSchema.pre('save', function (next) {
+    this.atualizadoEm = Date.now();
+    if (!this.slug) {
+        this.slug = slugify(this.titulo, { lower: true, strict: true });
+    }
+    next();
+});
 
 Evento.pre('save', function() {
     if (this.isModified('titulo') || this.isNew) {
