@@ -1,1 +1,38 @@
-<h1>test</h1>
+<section class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow p-4">
+                <h3 class="text-center">Olá, seja bem-vindo ao NJS Events!</h3>
+                <h4 class="text-center text-muted">Vamos começar o cadastro abaixo.</h4>
+                
+                <form action="/usuarios/registro" method="POST">
+                    <div class="mb-3">
+                        <label for="nomeDeUsuario" class="form-label">Nome de Usuário:</label>
+                        <input type="text" name="nomeDeUsuario" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email:</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha:</label>
+                        <input type="password" name="senha" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="senha2" class="form-label">Confirme sua senha:</label>
+                        <input type="password" name="senha2" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Criar conta</button>
+
+                    <div class="text-center mt-3">
+                        <a href="/usuarios/login" class="text-decoration-none">Já tem conta? Faça login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

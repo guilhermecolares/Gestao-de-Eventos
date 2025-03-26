@@ -238,7 +238,7 @@ router.post('/registro/pessoal', async (req, res) => {
 })
 
 router.get('/registro/verificacao', async (req, res) => {
-    res.render('usuarios/verificacao')
+    res.render('usuarios/registro-verificacao')
 })
 
 router.post('/registro/verificacao', async (req, res) => {

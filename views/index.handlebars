@@ -1,0 +1,32 @@
+<div class="container mt-4">
+    <div class="jumbotron">
+        <h1 class="display-4">Bem vindo, {{user.nomeDeUsuario}}!</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <h2>Seus Eventos:</h2>
+            <div class="list-group">
+                {{#each seusEventos}}
+                <div class="list-group-item list-group-item-action border p-3 mb-2">
+                    <h5>{{this.nome}}</h5>
+                    <p>{{this.descricao}}</p>
+                    <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right">Ver Mais</a>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        <div class="col-md-8">
+            <h2>Próximos Eventos:</h2>
+            <div class="list-group">
+                {{#each proximosEventos}}
+                <div class="list-group-item list-group-item-action border p-3 mb-2">
+                    <h5>{{this.nome}}</h5>
+                    <p>{{this.descricao}}</p>
+                    <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right">Ver Mais</a>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>

@@ -12,7 +12,7 @@ router.use('/admin', admin)
 router.use('/usuario', usuario)
 
 router.get('/', (req, res) => {
-    res.render('dashboard');
+    res.render('index');
 });
 
 export default router;

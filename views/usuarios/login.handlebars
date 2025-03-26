@@ -1,0 +1,28 @@
+<section class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow p-4">
+                <h3 class="text-center">Bem-vindo de volta ao NJS Events!</h3>
+                <h4 class="text-center text-muted">Faça login para continuar.</h4>
+                
+                <form action="/usuarios/login" method="POST">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email:</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha:</label>
+                        <input type="password" name="senha" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+
+                    <div class="text-center mt-3">
+                        <a href="/usuarios/registro" class="text-decoration-none">Ainda não tem conta? Cadastre-se</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
