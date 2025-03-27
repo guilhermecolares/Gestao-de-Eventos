@@ -13,11 +13,11 @@ router.get('/', (req, res) => {
 
 router.get('/categorias', async (req, res) => {
     const categorias = await Categoria.find().lean()
-    res.render('admin/categorias', { categorias })
+    res.render('admin/categorias', { categorias, hideFooter: true})
 })
 
 router.get('/categorias/nova', (req, res) => {
-    res.render('admin/addcategorias')
+    res.render('admin/addcategorias' , { hideFooter: true})
 })
 
 router.post('/categorias/nova', async (req, res) => {
@@ -60,7 +60,7 @@ router.get('/categorias/edit/:id', async (req, res) => {
             return res.redirect('/admin/categorias');
         }
 
-        res.render('admin/editcategorias', { categoria });
+        res.render('admin/editcategorias', { categoria, hideFooter: true });
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'Erro ao carregar categoria, tente novamente!');

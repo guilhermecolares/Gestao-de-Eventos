@@ -11,7 +11,7 @@
             </div>
         {{/if}}
 
-            <form action="/admin/categorias/edit" method="post">
+            <form action="/admin/categorias/edit" class="mt-300" method="post">
                 <input type="hidden" name="id" value="{{categoria._id}}">
             <div class="mb-3">
                 <label for="nome" class="form-label">Nome da Categoria</label>
@@ -21,3 +21,4 @@
             </form>
         <a href="/admin/categorias" class="btn btn-secondary mt-3">Voltar para Categorias</a>
     </div>
+
