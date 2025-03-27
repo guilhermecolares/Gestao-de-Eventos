@@ -9,7 +9,6 @@ const app = express();
 
 const router = express.Router();
 
-router.use('/admin', admin)
 router.use('/usuario', usuario)
 router.use('/evento', evento)
 

@@ -1,7 +1,8 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import Evento from '../models/Evento.js'
-import { eAdmin } from '../helpers/eAdmin.js'
+import { eADM } from '../helpers/eAdmin.js'
+import Categoria from '../models/Categoria.js'
 
 const router = express.Router()
 
@@ -37,6 +38,12 @@ router.post('/', async(req, res) => {
         }
     }
 
+    if (preco && isNaN(parseFloat(preco))) {
+        erros.push({ texto: 'Preço inválido!' })
+    } else if (preco && parseFloat(preco) < 0) {
+        erros.push({ texto: 'O preço não pode ser negativo!' })
+    }
+
     if (!categoria) {
         erros.push({ texto: 'Campo "Categoria" vazio!' })
     }
@@ -65,6 +72,24 @@ router.post('/', async(req, res) => {
         res.redirect('/')
     } catch (err) {
         req.flash('error_msg', 'Erro ao criar evento, tente novamente!')
+        res.redirect('/')
+    }
+})
+
+router.get('/edit/:id', async (req, res) => {
+    try {
+        const categorias = await Categoria.find().lean();
+        const evento = await Evento.findById(req.params.id).lean()
+
+        if (!evento) {
+            req.flash('error_msg', 'Evento não encontrado!');
+            return res.redirect('/')
+        }
+
+        res.render('eventos/edit', { categorias, evento })
+    } catch (err) {
+        console.error(err)
+        req.flash('error_msg', 'Erro ao carregar evento, tente novamente!')
         res.redirect('/')
     }
 })
@@ -112,6 +137,12 @@ router.put('/edit/:id', async (req, res) => {
             }
         }
 
+        if (preco && isNaN(parseFloat(preco))) {
+            erros.push({ texto: 'Preço inválido!' })
+        } else if (preco && parseFloat(preco) < 0) {
+            erros.push({ texto: 'O preço não pode ser negativo!' })
+        }
+
         if (!categoria) {
             erros.push({ texto: 'Campo "Categoria" vazio!' })
         }
@@ -143,9 +174,32 @@ router.put('/edit/:id', async (req, res) => {
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
-    
-})
+router.post('/delete/:id', async (req, res) => {
+    try {
+        const { id } = req.params
+        const evento = await Evento.findById(id)
 
+        if (!evento) {
+            req.flash('error_msg', 'Evento não encontrado!')
+            return res.redirect('/')
+        }
+
+        
+        if (evento.criador.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+            req.flash('error_msg', 'Você não tem permissão para deletar esse evento!')
+            return res.redirect('/')
+        }
+
+        await Evento.findByIdAndDelete(id)
+
+        req.flash('success_msg', 'Evento deletado com sucesso!')
+        return res.redirect('/')
+
+    } catch (error) {
+        console.error(error)
+        req.flash('error_msg', 'Erro ao deletar evento, tente novamente!')
+        res.redirect('/')
+    }
+})
 
 export default router

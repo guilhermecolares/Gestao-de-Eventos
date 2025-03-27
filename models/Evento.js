@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import Categoria from "./Categoria";
 import slugify from "slugify";
 const Schema = mongoose.Schema;
 
@@ -55,7 +54,7 @@ const Evento = new Schema({
     }
 })
 
-EventoSchema.pre('save', function (next) {
+Evento.pre('save', function (next) {
     this.atualizadoEm = Date.now();
     if (!this.slug) {
         this.slug = slugify(this.titulo, { lower: true, strict: true });

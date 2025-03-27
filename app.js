@@ -12,6 +12,7 @@
     import conectarDB from './config/db.js'
     import indexRotas from './routes/index.js'
     import usuario from './routes/usuario.js'
+    import Admin from './routes/admin.js'
 
     // CONFIGS DE BIBLIOTECAS
     const app = express()
@@ -76,6 +77,7 @@
         
     // ROUTES
         app.use('/', indexRotas)
+        app.use('/admin', Admin)
 
 // OUTROS
     const PORT = 9091

@@ -1,0 +1,16 @@
+html, body {
+    overflow: auto;
+}
+
+#addCategoryButton {
+    position: fixed;
+    bottom: 80px; /* Ajuste para garantir que não sobreponha o footer */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000; /* Garante que o botão ficará na frente de outros elementos */
+}
+
+footer {
+    position: relative; /* Garante que o footer não sobreponha o conteúdo */
+    z-index: 500; /* Menor que o botão de adicionar, para que ele fique por baixo */
+}

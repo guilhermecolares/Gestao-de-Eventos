@@ -1,0 +1,35 @@
+<div class="container mt-5">
+    <h2 class="mb-4">Categorias</h2>
+
+    {{#if categorias}}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each categorias}}
+                    <tr>
+                        <td>{{this.nome}}</td>
+                        <td>
+                            <a href="/admin/categorias/edit/{{this._id}}" class="btn btn-warning btn-sm">Editar</a>
+                            <form action="/admin/categorias/delete/{{this._id}}" method="POST" style="display:inline-block;">
+                                <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
+                            </form>
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    {{else}}
+        <div class="alert alert-info">
+            Não há categorias cadastradas.
+        </div>
+    {{/if}}
+
+    <a href="/admin/categorias/nova" class="btn btn-primary fixed-bottom" style="right: 20px; bottom: 20px; z-index: 1050;">
+        Adicionar Nova Categoria
+    </a>
+</div>

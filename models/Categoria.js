@@ -13,7 +13,7 @@ const CategoriaEvento = new Schema({
     }
 })
 
-CategoriaEvento.pre('save', function() {
+CategoriaEvento.pre('save', function(next) {
     if (this.isModified('nome') || this.isNew) {
     this.slug = slugify(this.nome, { lower: true, strict: true })
     }
