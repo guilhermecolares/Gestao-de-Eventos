@@ -1,316 +1,187 @@
-import express from 'express'
-import mongoose from 'mongoose'
-import Usuario from '../models/Usuario.js'
-import bcrypt from 'bcryptjs'
-import passport from 'passport'
-import { cpf } from 'cpf-cnpj-validator'
-import { parsePhoneNumberFromString } from 'libphonenumber-js'
-import { parse, isValid } from 'date-fns'
-import nodemailer from 'nodemailer'
-import { v4 as uuidv4 } from 'uuid'
-import Dotenv from 'dotenv'
-import { clampWithOptions } from 'date-fns/fp'
+import express from 'express';
+import Usuario from '../models/Usuario.js';
+import pkg from 'cpf-cnpj-validator';
+const { isValidCPF } = pkg;
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import validator from 'validator';
+import { parse, isValid } from 'date-fns';
+import passport from 'passport';
 
-const router = express.Router()
-const Usuarios = mongoose.model('usuarios')
+const router = express.Router();
 
-Dotenv.config()
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-}
-})
-
-const gerarTokenVerif = (email, token, req, res) => {
-    const opçoesEmail = {
-        from: 'scrgui01@gmail.com',
-        to: req.session.usuarioEmail,
-        subject: 'Codigo de Verificação de Email',
-        text: `Seu codigo de verificação de email é: ${token}`
-    }
-
-    transporter.sendMail(opçoesEmail, (error, info) => {
-        if (error) {
-            console.error(error)
-            req.flash('error_msg', 'Erro ao enviar email, tente novamente!')
-            return res.redirect('/usuarios/verificacao')
-        } else {
-            console.log(`Email enviado: ${info.response} ${info.envelope}`)
-            req.flash('success_msg', 'Email enviado com sucesso!')
-            return res.redirect('/usuarios/verificacao')
-        }
-    })
-}
-
+// Rota de registro (primeira parte)
 router.get('/registro', (req, res) => {
-    res.render('usuarios/registro')
-  })
+    res.render('usuarios/registro');
+});
 
+// Rota para processar o registro
 router.post('/registro', async (req, res) => {
-    const { nomeDeUsuario, email, senha, senha2 } = req.body
+    const { nomeDeUsuario, email, senha, senha2 } = req.body;
+    let erros = [];
 
-    let erros = []
-
-    // VALIDAÇÕES PARA O CAMPO NOME DE USUARIO
+    // Validações
     if (!nomeDeUsuario || nomeDeUsuario.trim() === '') {
-        erros.push({ texto: 'Campo "Nome de Usuário" vazio!' })
+        erros.push({ texto: 'Campo "Nome de Usuário" vazio!' });
     }
 
     if (nomeDeUsuario.length > 28) {
-        erros.push({ texto: 'Nome muito longo! (28 caracteres ou menos)' })
+        erros.push({ texto: 'Nome muito longo! (28 caracteres ou menos)' });
     }
 
-    // VALIDAÇÕES PARA O CAMPO EMAIL
-
-    try {
-        const emailExistente = await Usuarios.findOne({ email })
-
-        if (emailExistente) {
-            erros.push({ texto: 'Email ja cadastrado!' })
-        }
-
-        const usuarioExistente = await Usuarios.findOne({ nomeDeUsuario })
-
-        if (usuarioExistente) {
-            erros.push({ texto: 'Nome de usuário ja cadastrado!' })
-        }
-    } catch (err) {
-        console.log(err)
-        req.flash('error_msg', 'Erro ao validar cadastro, tente novamente!')
-    }
-    
-
-    // VALIDAÇÕES PARA O CAMPO SENHA
-    if (!senha || senha.trim() === '') {
-        erros.push({ texto: 'Campo "Senha" vazio!' })
+    if (!email || !validator.isEmail(email)) {
+        erros.push({ texto: 'Email inválido!' });
     }
 
-    if (!senha2 || senha2.trim() === '') {
-        erros.push({ texto: 'Campo "Confirmação de Senha" vazio!' })
+    if (senha !== senha2) {
+        erros.push({ texto: 'Senhas não conferem, tente novamente!' });
     }
-
-    if (senha != senha2) {
-        erros.push({ texto: 'Senhas não conferem, tente novamente!' })
-    } 
 
     if (erros.length > 0) {
-        res.render('usuarios/registro', { erros: erros, nomeDeUsuario: nomeDeUsuario, email: email })
-    } 
-
-    // CRIA O USUARIO NO BANCO DE DADOS
+        return res.render('usuarios/registro', { erros });
+    }
 
     try {
-        const usuario = await Usuarios.findOne({ email })
-
-        if (usuario && usuario.statusDeCadastro === 'incompleto') {
-            req.flash('error_msg', 'Finalize seu cadastro!')
-            res.redirect('/usuarios/registro/pessoal')
+        // Verifica se o email já está cadastrado
+        const usuarioExistente = await Usuario.findOne({ email });
+        if (usuarioExistente) {
+            erros.push({ texto: 'Email já cadastrado!' });
+            return res.render('usuarios/registro', { erros });
         }
 
-        req.session.usuarioEmail = email
-
-        const novoUsuario = new Usuarios({
+        const novoUsuario = new Usuario({
             nomeDeUsuario,
             email,
-            senha,
-            statusDeCadastro: 'incompleto'
-        })
+            senha,  // A senha será criptografada automaticamente
+            statusDeCadastro: 'incompleto',
+        });
 
-        await novoUsuario.save()
+        await novoUsuario.save();
 
-        req.flash('success_msg', 'Primeira parte do cadastro concluida!')
-        res.redirect('/usuarios/registro/pessoal')
+        req.session.usuarioEmail = email;
+        req.flash('success_msg', 'Cadastro inicial concluído!');
+
+        res.redirect('/usuarios/registro/pessoal');
     } catch (err) {
-        console.log(err)
-        req.flash('error_msg', 'Erro ao cadastrar informações, tente novamente!')
-        res.redirect('/usuarios/registro')
+        console.error(err);
+        req.flash('error_msg', 'Erro ao registrar usuário, tente novamente!');
+        res.redirect('/usuarios/registro');
     }
-    })
+});
 
+
+// Rota para cadastro de dados pessoais
 router.get('/registro/pessoal', (req, res) => {
-    res.render('usuarios/registro-pessoal')
-})
+    res.render('usuarios/registro-pessoal'); // Página de registro pessoal
+});
 
+// Rota de registro pessoal POST
 router.post('/registro/pessoal', async (req, res) => {
-    const { nome, sobrenome, telefone, cpf, dataDeNascimento } = req.body
+    const { nome, sobrenome, telefone, cpfValue, dataDeNascimento } = req.body;
+    let erros = [];
 
-    let erros = []
+    // Validações
+    if (!nome || nome.trim() === '') erros.push({ texto: 'Campo "Nome" vazio!' });
+    if (!sobrenome || sobrenome.trim() === '') erros.push({ texto: 'Campo "Sobrenome" vazio!' });
 
-    // VALIDAÇÕES PARA O CAMPO NOME
-    if (!nome || nome.trim() === '') {
-        erros.push({ texto: 'Campo "Nome" vazio!' })
+    // Verificação do telefone
+    if (!telefone || !parsePhoneNumberFromString(telefone, 'BR').isValid()) {
+        erros.push({ texto: 'Telefone inválido!' });
     }
 
-    if (nome.length < 3) {
-        erros.push({ texto: 'Nome muito curto! (3 caracteres ou mais)' })
+    if (!cpfValue || !isValidCPF(cpfValue)) {
+        erros.push({ texto: 'CPF inválido!' });
     }
 
-    if (nome > 20) {
-        erros.push({ texto: 'Nome muito longo! (20 caracteres ou menos)' })
-    }
-    
-    // VALIDAÇÕES PARA O CAMPO SOBRENOME
-    if (!sobrenome || sobrenome.trim() === '') {
-        erros.push({ texto: 'Campo "Sobrenome" vazio!' })
-    }
-
-    if (sobrenome.length < 3) {
-        erros.push({ texto: 'Sobrenome muito curto! (3 caracteres ou mais)' })
-    }
-
-    if (sobrenome > 20) {
-        erros.push({ texto: 'Sobrenome muito longo! (20 caracteres ou menos)' })
-    }
-
-    // VALIDAÇÃO MULTIPLA
-
-    const verifExistencia = async (campo, valor, erroMSG) => {
-        try {
-            const existe = await Usuarios.findOne({ [campo]: valor })
-            if (existe) {
-                return erros.push({ texto: erroMSG })
-            }
-        } catch (err) {
-            console.log(err)
-            return req.flash('error_msg', 'Erro ao validar cadastro, tente novamente!')
+    // Validação da data de nascimento
+    if (!dataDeNascimento) {
+        erros.push({ texto: 'Data de nascimento é obrigatória!' });
+    } else {
+        const dataFormatada = parse(dataDeNascimento, 'yyyy-MM-dd', new Date());
+        if (!isValid(dataFormatada)) {
+            erros.push({ texto: 'Data de nascimento inválida!' });
         }
-    }
-
-    // VALIDAÇÕES PARA O CAMPO TELEFONE
-
-    const numeroTelefone = parsePhoneNumberFromString(telefone, 'BR')
-
-    if (!numeroTelefone || !numeroTelefone.isValid()) {
-        erros.push({ texto: 'Telefone inválido!' })
-    } else {
-        await verifExistencia('telefone', numeroTelefone.number, 'Telefone ja cadastrado!')
-    }
-
-    // VALIDAÇÕES PARA O CAMPO CPF
-
-    if (!cpf.isValid(cpf)) {
-        erros.push({ texto: 'CPF inválido!' })
-    } else {
-        await verifExistencia('cpf', cpf, 'CPF ja cadastrado!')
-    }
-
-    // VALIDAÇÕES PARA O CAMPO DATA DE NASCIMENTO
-
-    if (!dataDeNascimento || dataDeNascimento.trim() === '') {
-        erros.push({ texto: 'Campo "Data de Nascimento" vazio!' })
-    }
-
-    const dataFormatada = parse(dataDeNascimento, 'yyyy-MM-dd', new Date())
-
-    if (!isValid(dataFormatada)) {
-        erros.push({ texto: 'Data de Nascimento inválida!' })
     }
 
     if (erros.length > 0) {
-        return res.render('usuarios/registro-pessoal', { erros, nome, sobrenome, telefone, cpf, dataDeNascimento })
+        return res.render('usuarios/registro-pessoal', { erros });
     }
-
-    const usuario = await Usuarios.findOne({ email: req.session.usuarioEmail })
-
-    if (!usuario) {
-        req.flash('error_msg', 'Usuario não encontrado, tente novamente!')
-        return res.redirect('/usuarios/registro')
-    }
-
-    const codigoDeVerif = uuidv4()
-
-    usuario.nome = nome
-    usuario.sobrenome = sobrenome
-    usuario.telefone = telefone
-    usuario.cpf = cpf
-    usuario.dataDeNascimento = dataDeNascimento
-    usuario.codigoDeVerif = codigoDeVerif
-
-    await usuario.save()
-
-    gerarTokenVerif(req.session.email, codigoDeVerif, req, res)
-
-    req.flash('success_msg', 'Informações cadastradas com sucesso! Verifique seu email para finalizar o cadastro!')
-    res.redirect('/usuarios/registro/verificacao')
-})
-
-router.get('/registro/verificacao', async (req, res) => {
-    res.render('usuarios/registro-verificacao')
-})
-
-router.post('/registro/verificacao', async (req, res) => {
-    const { codigoDeVerificaçãoDeEmail } = req.body
-
-    let erros = []
 
     try {
-        const usuario = await Usuarios.findOne({ email: req.session.usuarioEmail })
-
+        const usuario = await Usuario.findOne({ email: req.session.usuarioEmail });
         if (!usuario) {
-            req.flash('error_msg', 'Usuario não encontrado, tente novamente!')
-            return res.redirect('/usuarios/registro')
+            console.error('Usuário não encontrado!');
+            req.flash('error_msg', 'Usuário não encontrado!');
+            return res.redirect('/usuarios/registro');
         }
 
-        if (codigoDeVerificaçãoDeEmail !== usuario.codigoDeVerif) {
-            erros.push({ texto: 'Codigo de Verificação de Email inválido!' })
-            return res.render('usuarios/verificacao', { erros })
-        }
-        
-        usuario.statusDeCadastro = 'completo'
-        await usuario.save()
+        usuario.nome = nome;
+        usuario.sobrenome = sobrenome;
+        usuario.telefone = telefone;
+        usuario.cpf = cpfValue;
+        usuario.dataDeNascimento = dataDeNascimento;
+        usuario.statusDeCadastro = 'completo';
 
-        req.flash('success_msg', 'Cadastro concluido com sucesso!')
-        return res.redirect('/usuarios/login')
-    } catch (err) {
-        console.log(err)
-        req.flash('error_msg', 'Erro ao verificar email, tente novamente!')
-        return res.redirect('/usuarios/registro/verificacao')
+        await usuario.save();
+        console.log('Cadastro completo para:', usuario.email);
+        req.flash('success_msg', 'Cadastro completo! Você pode fazer login.');
+        res.redirect('/usuarios/login');
+    } catch (error) {
+        console.error('Erro ao completar cadastro:', error);
+        req.flash('error_msg', 'Erro ao completar cadastro, tente novamente!');
+        res.redirect('/usuarios/registro/pessoal');
     }
-})
-
+});
+// Rota de login
 router.get('/login', (req, res) => {
-    res.render('usuarios/login')
-})
+    res.render('usuarios/login');
+});
 
+// Processar login
 router.post('/login', async (req, res, next) => {
-    const { email, senha } = req.body
+    const { email, senha } = req.body;
+    let erros = [];
 
-    passport.authenticate('local', async(err, usuario, info) => {
-        if (err) {
-            return next(err)
-        }
+    if (!email || !senha) {
+        erros.push({ texto: 'Por favor, preencha todos os campos.' });
+        return res.render('usuarios/login', { erros });
+    }
+
+    // Verifique o usuário manualmente
+    try {
+        const usuario = await Usuario.findOne({ email });
         if (!usuario) {
-            req.flash('error_msg', 'Email ou senha incorretos!')
-            return res.redirect('/usuarios/login')
+            erros.push({ texto: 'Usuário não encontrado!' });
+            return res.render('usuarios/login', { erros });
         }
 
-        if (usuario.statusDeCadastro === 'incompleto') {
-            req.flash('error_msg', 'Finalize seu cadastro!')
-            return res.redirect('/usuarios/registro/pessoal')
+        // Verifique a senha manualmente, usando bcrypt para comparar a senha com o hash
+        const senhaCorreta = await usuario.compareSenha(senha);
+        if (!senhaCorreta) {
+            erros.push({ texto: 'Senha incorreta!' });
+            return res.render('usuarios/login', { erros });
         }
 
-        req.login(usuario, (err) => {
-            if (err) {
-                return next(err)
-            }
-            req.flash('success_msg', 'Logado com sucesso!')
-            return res.redirect('/')
-        })
-    })(req, res, next)
-})
+        // Crie a sessão com email e nome de usuário
+        req.session.usuarioEmail = email;
+        req.session.usuarioNome = usuario.nomeDeUsuario; // Aqui, você armazena o nome do usuário na sessão
 
-router.get('/logout', (req, res) => {
-    req.logout((err) => {
+        req.flash('success_msg', 'Login realizado com sucesso!');
+        res.redirect('/index');
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Erro ao fazer login, tente novamente!');
+        res.redirect('/usuarios/login');
+    }
+});
+
+router.post('/logout', (req, res) => {
+    req.session.destroy((err) => {
         if (err) {
-            return next(err)
+            return res.redirect('/index');
         }
-        req.flash('success_msg', 'Deslogado com sucesso!')
-        res.redirect('/')
-    })
-})
 
-
-export default router
+        res.clearCookie('connect.sid'); // Limpa o cookie de sessão
+        res.redirect('/usuarios/login'); // Redireciona para a página de login
+    });
+});
+export default router;

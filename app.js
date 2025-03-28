@@ -11,8 +11,6 @@
     import Handlebars from 'handlebars'
     import conectarDB from './config/db.js'
     import indexRotas from './routes/index.js'
-    import usuario from './routes/usuario.js'
-    import Admin from './routes/admin.js'
 
     // CONFIGS DE BIBLIOTECAS
     const app = express()
@@ -24,16 +22,23 @@
         const __dirname = path.dirname(__filename)
 
     // SESSION
-        app.use((session({
-            secret: '44792',
-            resave: true,
-            saveUninitialized: true,
-        })))
-
-        app.use(passport.initialize())
-        app.use(passport.session())
-
-        app.use(flash())
+    app.use(session({
+        secret: '44792', 
+        resave: true,
+        saveUninitialized: true,
+        cookie: { secure: false } // Se for usar HTTPS, altere para 'secure: true'
+    }));
+    
+    app.use(passport.initialize());
+    app.use(passport.session()); // Certifique-se de que esta linha está após o middleware de sessão
+    
+    app.use(flash());
+    
+    // Verificação de logs da sessão
+    app.use((req, res, next) => {
+        console.log('Sessão:', req.session); // Log para verificar o conteúdo da sessão
+        next();
+    });
 
     // MIDDLEWARES
         app.use((req, res, next) => {
@@ -77,7 +82,6 @@
         
     // ROUTES
         app.use('/', indexRotas)
-        app.use('/admin', Admin)
 
 // OUTROS
     const PORT = 9091
