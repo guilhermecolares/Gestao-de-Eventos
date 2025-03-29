@@ -1,25 +1,24 @@
 import express from 'express';
 import Usuario from '../models/Usuario.js';
-import pkg from 'cpf-cnpj-validator';
-const { isValidCPF } = pkg;
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import validator from 'validator';
 import { parse, isValid } from 'date-fns';
-import passport from 'passport';
+import bcrypt from 'bcryptjs';
+
 
 const router = express.Router();
 
-// Rota de registro (primeira parte)
+// Rota de registro (única página para todo o processo)
 router.get('/registro', (req, res) => {
-    res.render('usuarios/registro');
+    res.render('usuarios/registro', { hideFooter: true });
 });
 
-// Rota para processar o registro
+// Rota para processar o registro (única rota para todos os dados)
 router.post('/registro', async (req, res) => {
-    const { nomeDeUsuario, email, senha, senha2 } = req.body;
+    const { nomeDeUsuario, email, senha, senha2, nome, sobrenome, telefone, cpfValue, dataDeNascimento } = req.body;
     let erros = [];
 
-    // Validações
+    // Validações dos dados de registro
     if (!nomeDeUsuario || nomeDeUsuario.trim() === '') {
         erros.push({ texto: 'Campo "Nome de Usuário" vazio!' });
     }
@@ -36,50 +35,7 @@ router.post('/registro', async (req, res) => {
         erros.push({ texto: 'Senhas não conferem, tente novamente!' });
     }
 
-    if (erros.length > 0) {
-        return res.render('usuarios/registro', { erros });
-    }
-
-    try {
-        // Verifica se o email já está cadastrado
-        const usuarioExistente = await Usuario.findOne({ email });
-        if (usuarioExistente) {
-            erros.push({ texto: 'Email já cadastrado!' });
-            return res.render('usuarios/registro', { erros });
-        }
-
-        const novoUsuario = new Usuario({
-            nomeDeUsuario,
-            email,
-            senha,  // A senha será criptografada automaticamente
-            statusDeCadastro: 'incompleto',
-        });
-
-        await novoUsuario.save();
-
-        req.session.usuarioEmail = email;
-        req.flash('success_msg', 'Cadastro inicial concluído!');
-
-        res.redirect('/usuarios/registro/pessoal');
-    } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'Erro ao registrar usuário, tente novamente!');
-        res.redirect('/usuarios/registro');
-    }
-});
-
-
-// Rota para cadastro de dados pessoais
-router.get('/registro/pessoal', (req, res) => {
-    res.render('usuarios/registro-pessoal'); // Página de registro pessoal
-});
-
-// Rota de registro pessoal POST
-router.post('/registro/pessoal', async (req, res) => {
-    const { nome, sobrenome, telefone, cpfValue, dataDeNascimento } = req.body;
-    let erros = [];
-
-    // Validações
+    // Validações dos dados pessoais
     if (!nome || nome.trim() === '') erros.push({ texto: 'Campo "Nome" vazio!' });
     if (!sobrenome || sobrenome.trim() === '') erros.push({ texto: 'Campo "Sobrenome" vazio!' });
 
@@ -88,8 +44,9 @@ router.post('/registro/pessoal', async (req, res) => {
         erros.push({ texto: 'Telefone inválido!' });
     }
 
-    if (!cpfValue || !isValidCPF(cpfValue)) {
-        erros.push({ texto: 'CPF inválido!' });
+    // Removido a validação de CPF
+    if (!cpfValue) {
+        erros.push({ texto: 'CPF é obrigatório!' });
     }
 
     // Validação da data de nascimento
@@ -103,41 +60,50 @@ router.post('/registro/pessoal', async (req, res) => {
     }
 
     if (erros.length > 0) {
-        return res.render('usuarios/registro-pessoal', { erros });
+        return res.render('usuarios/registro', { erros, nomeDeUsuario, email, nome, sobrenome, telefone, cpfValue, dataDeNascimento });
     }
 
     try {
-        const usuario = await Usuario.findOne({ email: req.session.usuarioEmail });
-        if (!usuario) {
-            console.error('Usuário não encontrado!');
-            req.flash('error_msg', 'Usuário não encontrado!');
-            return res.redirect('/usuarios/registro');
+        // Verifica se o email já está cadastrado
+        const usuarioExistente = await Usuario.findOne({ email });
+
+        if (usuarioExistente) {
+            erros.push({ texto: 'Email já cadastrado!' });
+            return res.render('usuarios/registro', { erros, nomeDeUsuario, email });
         }
 
-        usuario.nome = nome;
-        usuario.sobrenome = sobrenome;
-        usuario.telefone = telefone;
-        usuario.cpf = cpfValue;
-        usuario.dataDeNascimento = dataDeNascimento;
-        usuario.statusDeCadastro = 'completo';
+        // Cria um novo usuário com todos os dados
+        const novoUsuario = new Usuario({
+            nomeDeUsuario,
+            email,
+            senha,
+            nome,
+            sobrenome,
+            telefone,
+            cpf: cpfValue,
+            dataDeNascimento,
+            statusDeCadastro: 'completo', // Marca como cadastro completo
+        });
 
-        await usuario.save();
-        console.log('Cadastro completo para:', usuario.email);
+        // Salva o novo usuário no banco de dados
+        await novoUsuario.save();
+
         req.flash('success_msg', 'Cadastro completo! Você pode fazer login.');
         res.redirect('/usuarios/login');
-    } catch (error) {
-        console.error('Erro ao completar cadastro:', error);
-        req.flash('error_msg', 'Erro ao completar cadastro, tente novamente!');
-        res.redirect('/usuarios/registro/pessoal');
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Erro ao registrar usuário, tente novamente!');
+        res.redirect('/usuarios/registro');
     }
 });
+
 // Rota de login
 router.get('/login', (req, res) => {
     res.render('usuarios/login');
 });
 
-// Processar login
-router.post('/login', async (req, res, next) => {
+// Processar login sem passport
+router.post('/login', async (req, res) => {
     const { email, senha } = req.body;
     let erros = [];
 
@@ -146,42 +112,48 @@ router.post('/login', async (req, res, next) => {
         return res.render('usuarios/login', { erros });
     }
 
-    // Verifique o usuário manualmente
     try {
+        // Verifica se o usuário existe
         const usuario = await Usuario.findOne({ email });
+
         if (!usuario) {
-            erros.push({ texto: 'Usuário não encontrado!' });
+            erros.push({ texto: 'Email não encontrado.' });
             return res.render('usuarios/login', { erros });
         }
 
-        // Verifique a senha manualmente, usando bcrypt para comparar a senha com o hash
+        // Compara a senha fornecida com a senha criptografada no banco
         const senhaCorreta = await usuario.compareSenha(senha);
+
         if (!senhaCorreta) {
-            erros.push({ texto: 'Senha incorreta!' });
+            erros.push({ texto: 'Senha incorreta.' });
             return res.render('usuarios/login', { erros });
         }
 
-        // Crie a sessão com email e nome de usuário
-        req.session.usuarioEmail = email;
-        req.session.usuarioNome = usuario.nomeDeUsuario; // Aqui, você armazena o nome do usuário na sessão
+        // Cria a sessão para o usuário logado
+        req.session.usuarioId = usuario._id;
+        req.session.usuarioNome = usuario.nomeDeUsuario;
+        req.session.usuarioEmail = usuario.email;
 
         req.flash('success_msg', 'Login realizado com sucesso!');
         res.redirect('/index');
     } catch (err) {
         console.error(err);
-        req.flash('error_msg', 'Erro ao fazer login, tente novamente!');
+        req.flash('error_msg', 'Erro ao tentar fazer login, tente novamente!');
         res.redirect('/usuarios/login');
     }
 });
 
-router.post('/logout', (req, res) => {
+// Rota de logout
+router.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
+            console.log(err);
             return res.redirect('/index');
         }
 
-        res.clearCookie('connect.sid'); // Limpa o cookie de sessão
-        res.redirect('/usuarios/login'); // Redireciona para a página de login
+        res.clearCookie('connect.sid');
+        res.redirect('/usuarios/login');
     });
 });
+
 export default router;

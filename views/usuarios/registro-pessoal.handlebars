@@ -3,9 +3,9 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow p-4">
                 <h3 class="text-center">Complete seu Cadastro</h3>
-                <h4 class="text-center text-muted">Precisamos de mais algumas informações.</h4>
+                <h4 class="text-center text-muted">Precisamos de mais algumas informa es.</h4>
                 
-                <form action="/usuarios/login" method="POST">
+                <form action="/usuarios/registro/pessoal" method="POST">
                     <div class="mb-3">
                         <label for="nome" class="form-label">Nome:</label>
                         <input type="text" name="nome" class="form-control" required>
@@ -18,12 +18,16 @@
                     
                     <div class="mb-3">
                         <label for="telefone" class="form-label">Telefone:</label>
-                        <input type="tel" name="telefone" class="form-control" required>
+                        <input type="tel" name="telefone" class="form-control" required 
+                               pattern="^\(\d{2}\) \d{4,5}-\d{4}$" 
+                               placeholder="Ex: (11) 98765-4321">
                     </div>
 
                     <div class="mb-3">
                         <label for="cpf" class="form-label">CPF:</label>
-                        <input type="text" name="cpf" class="form-control" required pattern="[0-9]{3}\.[0-9]{3}\.[0-9]{3}\-[0-9]{2}">
+                        <input type="text" name="cpfValue" class="form-control" required
+                            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
+                            placeholder="Ex: 123.456.789-00">
                     </div>
 
                     <div class="mb-3">

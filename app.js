@@ -23,20 +23,23 @@
 
     // SESSION
     app.use(session({
-        secret: '44792', 
+        secret: '44792',
         resave: true,
         saveUninitialized: true,
-        cookie: { secure: false } // Se for usar HTTPS, altere para 'secure: true'
+        cookie: { 
+            secure: false,
+            httpOnly: true
+        }
     }));
     
     app.use(passport.initialize());
-    app.use(passport.session()); // Certifique-se de que esta linha está após o middleware de sessão
+    app.use(passport.session()); 
     
     app.use(flash());
     
     // Verificação de logs da sessão
     app.use((req, res, next) => {
-        console.log('Sessão:', req.session); // Log para verificar o conteúdo da sessão
+        console.log('Sessão:', req.session);
         next();
     });
 
