@@ -4,7 +4,9 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import validator from 'validator';
 import { parse, isValid } from 'date-fns';
 import bcrypt from 'bcryptjs';
+import passport from 'passport';
 
+const app = express();
 
 const router = express.Router();
 
@@ -103,44 +105,12 @@ router.get('/login', (req, res) => {
 });
 
 // Processar login sem passport
-router.post('/login', async (req, res) => {
-    const { email, senha } = req.body;
-    let erros = [];
-
-    if (!email || !senha) {
-        erros.push({ texto: 'Por favor, preencha todos os campos.' });
-        return res.render('usuarios/login', { erros });
-    }
-
-    try {
-        // Verifica se o usuário existe
-        const usuario = await Usuario.findOne({ email });
-
-        if (!usuario) {
-            erros.push({ texto: 'Email não encontrado.' });
-            return res.render('usuarios/login', { erros });
-        }
-
-        // Compara a senha fornecida com a senha criptografada no banco
-        const senhaCorreta = await usuario.compareSenha(senha);
-
-        if (!senhaCorreta) {
-            erros.push({ texto: 'Senha incorreta.' });
-            return res.render('usuarios/login', { erros });
-        }
-
-        // Cria a sessão para o usuário logado
-        req.session.usuarioId = usuario._id;
-        req.session.usuarioNome = usuario.nomeDeUsuario;
-        req.session.usuarioEmail = usuario.email;
-
-        req.flash('success_msg', 'Login realizado com sucesso!');
-        res.redirect('/index');
-    } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'Erro ao tentar fazer login, tente novamente!');
-        res.redirect('/usuarios/login');
-    }
+router.post('/login', (req, res, next) => {
+    passport.authenticate('local', {
+        successRedirect: '/index',
+        failureRedirect: '/usuarios/login',
+        failureFlash: true,
+    })(req, res, next);
 });
 
 // Rota de logout

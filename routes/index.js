@@ -3,6 +3,9 @@ import usuario from './usuario.js';
 import evento from './evento.js';
 import Usuario from '../models/Usuario.js';
 import Evento from '../models/Evento.js';
+import verificarAutenticacao  from '../helpers/vefAuth.js';
+
+const app = express();
 
 const router = express.Router();
 
@@ -10,22 +13,13 @@ const router = express.Router();
 router.use('/usuarios', usuario);
 
 // Rotas de evento
-router.use('/evento', evento);
-
-// Rota principal (página inicial)
-router.get('/', (req, res) => {
-    res.render('index'); // Renderiza a página inicial com EJS
-});
+router.use('/eventos', evento);
 
 // Rota /index (Página inicial após login)
-router.get('/index', async (req, res) => {
-    if (!req.session.usuarioEmail) {
-        return res.redirect('/usuarios/login'); // Redireciona se o usuário não estiver logado
-    }
-
+router.get('/index', verificarAutenticacao, async (req, res) => {
     try {
-        // Buscar o usuário pelo e-mail armazenado na sessão
-        const usuario = await Usuario.findOne({ email: req.session.usuarioEmail });
+        // Buscar o usuário pelo ID armazenado em req.user
+        const usuario = await Usuario.findById(req.user._id);
 
         // Buscar os eventos do usuário
         const seusEventos = await Evento.find({ usuarioId: usuario._id });

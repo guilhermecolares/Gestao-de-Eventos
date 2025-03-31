@@ -1,0 +1,68 @@
+{{#if erros}}
+    <div class="alert alert-danger">
+        <ul>
+            {{#each erros}}
+                <li>{{this.texto}}</li>
+            {{/each}}
+        </ul>
+    </div>
+{{/if}}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg p-4">
+                <h2 class="text-center mb-4">Adicionar Novo Evento</h2>
+                
+                {{#if erros}}
+                    <div class="alert alert-danger">
+                        <ul>
+                            {{#each erros}}
+                                <li>{{this.texto}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                {{/if}}
+                
+                <form action="/eventos" method="POST">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título do Evento</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="data" name="data" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="preco" class="form-label">Preço (Opcional)</label>
+                        <input type="number" class="form-control" id="preco" name="preco" step="0.01">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">Categoria</label>
+                        <select class="form-select" id="categoria" name="categoria" required>
+                            <option value="">Selecione uma categoria</option>
+                            {{#each categorias}}
+                                <option value="{{this._id}}">{{this.nome}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="local" class="form-label">Local</label>
+                        <input type="text" class="form-control" id="local" name="local" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Criar Evento</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

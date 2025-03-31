@@ -5,6 +5,11 @@
         <hr>
         <ul class="nav flex-column">
             <li class="nav-item">
+                <a href="/eventos/" class="nav-link text-white">
+                    ✅Criar Evento
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="#seusEventos" class="nav-link text-white">
                     📅 Seus Eventos
                 </a>
@@ -29,7 +34,7 @@
                 <div class="list-group">
                     {{#each seusEventos}}
                     <div class="list-group-item list-group-item-action border p-3 mb-2">
-                        <h5>{{this.nome}}</h5>
+                        <h5>{{this.titulo}}</h5>
                         <p>{{this.descricao}}</p>
                         <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right">Ver Mais</a>
                     </div>
@@ -44,7 +49,7 @@
                 <div class="list-group">
                     {{#each proximosEventos}}
                     <div class="list-group-item list-group-item-action border p-3 mb-2">
-                        <h5>{{this.nome}}</h5>
+                        <h5>{{this.titulo}}</h5>
                         <p>{{this.descricao}}</p>
                         <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right">Ver Mais</a>
                     </div>

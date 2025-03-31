@@ -62,7 +62,7 @@ Evento.pre('save', function (next) {
     next();
 });
 
-Evento.pre('save', function() {
+Evento.pre('save', function(next) {
     if (this.isModified('titulo') || this.isNew) {
         this.slug = slugify(this.titulo, { lower: true, strict: true })
         next()
