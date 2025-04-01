@@ -4,8 +4,19 @@ import Evento from '../models/Evento.js'
 import { eADM } from '../helpers/eAdmin.js'
 import verificarAutenticado from '../helpers/vefAuth.js'
 import Categoria from '../models/Categoria.js'
+import ExpressHandlebars from 'express-handlebars'
+import Handlebars from 'handlebars'
+
 
 const router = express.Router()
+
+Handlebars.registerHelper('eq', function (a, b) {
+    return a === b;
+});
+
+Handlebars.registerHelper('formatarData', (data) => {
+     return data.toLocaleDateString('pt-BR');
+    });
 
 router.get('/', verificarAutenticado, async (req, res) => {
     try {
@@ -66,18 +77,20 @@ router.get('/edit/:id', async (req, res) => {
 
         if (!evento) {
             req.flash('error_msg', 'Evento não encontrado!');
-            return res.redirect('/')
+            return res.redirect('/index')
         }
 
-        res.render('eventos/edit', { categorias, evento })
+        res.render('eventos/editeventos', { categorias, evento })
     } catch (err) {
         console.error(err)
         req.flash('error_msg', 'Erro ao carregar evento, tente novamente!')
-        res.redirect('/')
+        res.redirect('/index')
     }
 })
 
 router.put('/edit/:id', async (req, res) => {
+    console.log('Método:', req.method);
+    console.log('Corpo:', req.body);
     try {
         const { id } = req.params
 
@@ -85,12 +98,12 @@ router.put('/edit/:id', async (req, res) => {
 
         if (!evento) {
             req.flash('error_msg', 'Evento não encontrado!')
-            return res.redirect('/')
+            return res.redirect('/index')
         }
 
         if (evento.criador.toString() !== req.user._id.toString()) {
             req.flash('error_msg', 'Você não tem permissão para editar esse     evento!')
-            return res.redirect('/')
+            return res.redirect('/index')
         }
 
         const { titulo, descricao, data, preco, categoria, local } = req.body
@@ -138,15 +151,19 @@ router.put('/edit/:id', async (req, res) => {
             return res.render('eventos/edit', { erros, evento })
         }
 
-        evento.titulo = titulo
-        evento.descricao = descricao
-        evento.data = new Date(data)
-        evento.preco = preco ? parseFloat(preco) : undefined
-        evento.categoria = categoria
-        evento.local = local
-        evento.criador = req.user._id
-
-        await evento.save()
+        const eventoAtualizado = await Evento.findByIdAndUpdate(
+            id,
+            {
+                titulo,
+                descricao,
+                data: new Date(data),
+                preco: preco ? parseFloat(preco) : undefined,
+                categoria,
+                local,
+                criador: req.user._id,
+            },
+            { new: true } // Retorna o documento atualizado
+        )
 
         req.flash('success_msg', 'Evento editado com sucesso!')
         res.redirect('/index')
@@ -158,31 +175,26 @@ router.put('/edit/:id', async (req, res) => {
     }
 })
 
-router.post('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', verificarAutenticado, async (req, res) => {
     try {
-        const { id } = req.params
-        const evento = await Evento.findById(id)
+        const { id } = req.params;
+        await Evento.findByIdAndDelete(id);
+        res.sendStatus(204);
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
+});
 
-        if (!evento) {
-            req.flash('error_msg', 'Evento não encontrado!')
-            return res.redirect('/')
-        }
+router.get('/meuseventos', verificarAutenticado, async (req, res) => {
+    try {
+        const eventos = await Evento.find({ criador: req.user._id }).lean()
 
-        
-        if (evento.criador.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-            req.flash('error_msg', 'Você não tem permissão para deletar esse evento!')
-            return res.redirect('/')
-        }
-
-        await Evento.findByIdAndDelete(id)
-
-        req.flash('success_msg', 'Evento deletado com sucesso!')
-        return res.redirect('/')
-
+        res.render('eventos/meuseventos', { eventos, hideFooter: true })
     } catch (error) {
         console.error(error)
-        req.flash('error_msg', 'Erro ao deletar evento, tente novamente!')
-        res.redirect('/')
+        req.flash('error_msg', 'Erro ao carregar seus eventos, tente novamente!')
+        res.redirect('/index')
     }
 })
 

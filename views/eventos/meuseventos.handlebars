@@ -1,0 +1,20 @@
+<div class="container mt-4">
+    <h1>Meus Eventos</h1>
+
+    {{#if eventos.length}}
+        <div class="list-group">
+            {{#each eventos}}
+                <div class="list-group-item list-group-item-action border p-3 mb-2">
+                    <h5>{{titulo}}</h5>
+                    <p>{{descricao}}</p>
+                    <p><strong>Data:</strong> {{formatarData this.data "DD/MM/YYYY"}}</p> 
+                    <a href="/eventos/edit/{{_id}}"><button class="btn btn-success mb-1">Editar</button></a> <br>
+                    <button type="submit" class="btn btn-danger btn-sm" data-id="{{_id}}">Deletar</button>
+                    <a href="/eventos/{{_id}}" class="btn btn-primary btn-sm float-end">Ver Mais</a>
+                </div>
+            {{/each}}
+        </div>
+    {{else}}
+        <p>Nenhum evento encontrado.</p>
+    {{/if}}
+</div>

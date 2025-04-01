@@ -66,6 +66,6 @@ UsuarioDB.methods.compareSenha = function (senha) {
 };
 
 // Criar o modelo
-const Usuario = mongoose.model('Usuario', UsuarioDB);
+const Usuario = mongoose.model('usuario', UsuarioDB);
 
 export default Usuario;

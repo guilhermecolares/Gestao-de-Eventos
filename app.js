@@ -14,11 +14,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import MongoStore from 'connect-mongo';
+import methodOverride from 'method-override'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+app.use(methodOverride('_method'))
 
 const secret = crypto.randomBytes(64).toString('hex');
 

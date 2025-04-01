@@ -22,10 +22,10 @@ router.get('/index', verificarAutenticacao, async (req, res) => {
         const usuario = await Usuario.findById(req.user._id);
 
         // Buscar os eventos do usuário
-        const seusEventos = await Evento.find({ usuarioId: usuario._id });
+        const seusEventos = await Evento.find({ usuarioId: usuario._id }).sort({ data: 1 }).limit(4).populate('criador', 'nomeDeUsuario').lean();
 
         // Buscar os próximos eventos gerais
-        const proximosEventos = await Evento.find({ data: { $gte: new Date() } }).sort({ data: 1 });
+        const proximosEventos = await Evento.find({ data: { $gte: new Date() } }).sort({ data: 1 }).limit(4).populate('criador', 'nomeDeUsuario').lean()
 
         // Passar os dados para o template
         res.render('index', {
