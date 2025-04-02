@@ -13,7 +13,7 @@ const Evento = new Schema({
     },
     inscritos: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'usuarios'
+        ref: 'usuario'
     }],
     data: {
         type: Date,
@@ -44,6 +44,10 @@ const Evento = new Schema({
         ref: 'usuario',
         required: true
     },
+    inscrito: {
+        type: Boolean,
+        default: false
+    },
     criadoEm: {
         type: Date,
         default: Date.now
@@ -56,17 +60,10 @@ const Evento = new Schema({
 
 Evento.pre('save', function (next) {
     this.atualizadoEm = Date.now();
-    if (!this.slug) {
+    if (!this.slug || this.isModified('titulo') || this.isNew) {
         this.slug = slugify(this.titulo, { lower: true, strict: true });
     }
     next();
 });
-
-Evento.pre('save', function(next) {
-    if (this.isModified('titulo') || this.isNew) {
-        this.slug = slugify(this.titulo, { lower: true, strict: true })
-        next()
-    }
-})
 
 export default mongoose.model('evento', Evento)

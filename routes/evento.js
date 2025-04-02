@@ -198,4 +198,55 @@ router.get('/meuseventos', verificarAutenticado, async (req, res) => {
     }
 })
 
+router.get('/eventos/:id', verificarAutenticado, async (req, res) => {
+    try {
+        const evento = await Evento.findById(req.params.id).lean();
+        const usuarioId = req.user._id.toString(); // ID do usuário autenticado
+
+        // Verifica se o usuário já está na lista de inscritos
+        const estaInscrito = evento.inscritos.some(inscrito => inscrito.toString() === usuarioId);
+
+        res.render('evento', { evento, estaInscrito }); // Passando a variável para a view
+    } catch (error) {
+        console.error('Erro ao carregar evento:', error);
+        res.status(500).send('Erro interno');
+    }
+});
+
+router.post('/inscrever/:id', verificarAutenticado, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const usuarioId = req.user.id; // Pegando o ID do usuário autenticado
+
+        // Verifica se o ID é válido
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            req.flash('error_msg', 'ID inválido!');
+            return res.redirect('/index');
+        }
+
+        const evento = await Evento.findById(id);
+        if (!evento) {
+            req.flash('error_msg', 'Evento não encontrado!');
+            return res.redirect('/index');
+        }
+
+        // Se o usuário já estiver inscrito, remove ele
+        if (evento.inscritos.includes(usuarioId)) {
+            evento.inscritos = evento.inscritos.filter(inscrito => inscrito.toString() !== usuarioId);
+            await evento.save();
+            req.flash('success_msg', 'Você se desinscreveu do evento.');
+        } else {
+            evento.inscritos.push(usuarioId);
+            await evento.save();
+            req.flash('success_msg', 'Inscrição realizada com sucesso!');
+        }
+
+        res.redirect('/index');
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Erro ao processar a inscrição!');
+        res.redirect('/index');
+    }
+});
+
 export default router
