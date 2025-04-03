@@ -36,6 +36,10 @@ const Evento = new Schema({
         type: String,
         required: false
     },
+    capacidade: {
+        type: Number,
+        required: true
+    },
     imagem: {
         type: String,
     },

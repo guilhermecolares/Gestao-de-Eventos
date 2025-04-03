@@ -15,7 +15,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#proximosEventos" class="nav-link text-white">
+                <a href="/eventos/proximos" class="nav-link text-white">
                     ⏳ Próximos Eventos
                 </a>
             </li>
@@ -57,17 +57,18 @@
                             <h5>{{this.titulo}}</h5>
                             <p>{{this.descricao}}</p>
                             <p><strong>Data:</strong> {{formatarData this.data "DD/MM/YYYY"}}</p>
+                            <p><strong>Inscritos:</strong> {{this.inscritos.length}}/{{this.capacidade}}</p>
+                            <p><strong>Preço:</strong> {{#if preco}}{{formatarMoeda preco}}{{else}}Gratuito{{/if}}</p>
                             <p>Criado por: {{this.criador.nomeDeUsuario}}</p>
-                            <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right mb-2">Ver Mais</a> <br>
-
                             <form action="/eventos/inscrever/{{this._id}}" method="POST">
-    <input type="hidden" name="eventoId" value="{{this._id}}">
-    {{#if estaInscrito}}
-        <button class="btn btn-warning unsubscribe-event" data-id="{{this._id}}">Desinscrever</button>
-    {{else}}
-        <button type="submit" class="btn btn-success btn-sm">Inscrever</button>
-    {{/if}}
-</form>
+                                    <input type="hidden" name="eventoId" value="{{this._id}}">
+                                {{#if estaInscrito}}
+                                    <button class="btn btn-warning unsubscribe-event" data-id="{{this._id}}">Desinscrever</button>
+                                {{else}}
+                                    <button type="submit" class="btn btn-success btn-sm">Inscrever</button>
+                                {{/if}}
+                            </form>
+                            <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right mt-2">Ver Mais</a> <br>
                         </div>
                     {{else}}
                         <p>Nenhum evento encontrado.</p>

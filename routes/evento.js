@@ -15,8 +15,13 @@ Handlebars.registerHelper('eq', function (a, b) {
 });
 
 Handlebars.registerHelper('formatarData', (data) => {
-     return data.toLocaleDateString('pt-BR');
-    });
+    return data.toLocaleDateString('pt-BR');
+});
+
+Handlebars.registerHelper('formatarMoeda', function (value) {
+    return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+});
+
 
 router.get('/', verificarAutenticado, async (req, res) => {
     try {
@@ -31,21 +36,34 @@ router.get('/', verificarAutenticado, async (req, res) => {
 
 router.post('/', async (req, res) => {
     console.log('req.user:', req.user);
-    const { titulo, descricao, data, preco, categoria, local } = req.body;
+    const { titulo, descricao, data, preco, categoria, local, capacidade } = req.body;
 
     let erros = [];
 
+    // Verifica se o usuário está autenticado
     if (!req.user) {
         req.flash('error_msg', 'Você precisa estar logado para criar um evento.');
-        return res.redirect('/usuarios/login'); // ou redirecionar para outra página
+        return res.redirect('/usuarios/login');
     }
 
+    // Validações dos campos obrigatórios
     if (!titulo || titulo.trim() === '') {
         erros.push({ texto: 'Campo "Título" vazio!' });
     }
+    if (!data) {
+        erros.push({ texto: 'Campo "Data" é obrigatório!' });
+    }
+    if (preco && isNaN(preco)) {
+        erros.push({ texto: 'O preço deve ser um número válido!' });
+    }
+    if (!capacidade || isNaN(capacidade) || capacidade <= 0) {
+        erros.push({ texto: 'A capacidade deve ser um número maior que zero!' });
+    }
 
     if (erros.length > 0) {
-        return res.render('eventos/addeventos', { erros, titulo, descricao, data, preco, categoria, local });
+        return res.render('eventos/addeventos', { 
+            erros, titulo, descricao, data, preco, categoria, local, capacidade 
+        });
     }
 
     try {
@@ -56,6 +74,7 @@ router.post('/', async (req, res) => {
             preco: preco ? parseFloat(preco) : undefined,
             categoria,
             local,
+            capacidade: parseInt(capacidade),
             criador: req.user._id // Adiciona o criador do evento
         });
 
@@ -91,35 +110,35 @@ router.get('/edit/:id', async (req, res) => {
 router.put('/edit/:id', async (req, res) => {
     console.log('Método:', req.method);
     console.log('Corpo:', req.body);
+    
     try {
-        const { id } = req.params
-
-        const evento = await Evento.findById(id)
+        const { id } = req.params;
+        const evento = await Evento.findById(id);
 
         if (!evento) {
-            req.flash('error_msg', 'Evento não encontrado!')
-            return res.redirect('/index')
+            req.flash('error_msg', 'Evento não encontrado!');
+            return res.redirect('/index');
         }
 
         if (evento.criador.toString() !== req.user._id.toString()) {
-            req.flash('error_msg', 'Você não tem permissão para editar esse     evento!')
-            return res.redirect('/index')
+            req.flash('error_msg', 'Você não tem permissão para editar esse evento!');
+            return res.redirect('/index');
         }
 
-        const { titulo, descricao, data, preco, categoria, local } = req.body
+        const { titulo, descricao, data, preco, categoria, local, capacidade } = req.body;
 
-        let erros = []
+        let erros = [];
 
         if (!titulo || titulo.trim() === '') {
-            erros.push({ texto: 'Campo "Titulo" vazio!' })
+            erros.push({ texto: 'Campo "Título" vazio!' });
         }
 
         if (titulo.length < 3 || titulo.length > 50) {
-            erros.push({ texto: 'Titulo muito curto! (de 3 até 50 Caracteres)' })
+            erros.push({ texto: 'Título muito curto! (de 3 até 50 caracteres)' });
         }
 
         if (!descricao || descricao.trim() === '') {
-            erros.push({ texto: 'Campo "Descricao" vazio!' })
+            erros.push({ texto: 'Campo "Descrição" vazio!' });
         }
 
         if (!data || data.trim() === '') {
@@ -134,21 +153,25 @@ router.put('/edit/:id', async (req, res) => {
         }
 
         if (preco && isNaN(parseFloat(preco))) {
-            erros.push({ texto: 'Preço inválido!' })
+            erros.push({ texto: 'Preço inválido!' });
         } else if (preco && parseFloat(preco) < 0) {
-            erros.push({ texto: 'O preço não pode ser negativo!' })
+            erros.push({ texto: 'O preço não pode ser negativo!' });
         }
 
         if (!categoria) {
-            erros.push({ texto: 'Campo "Categoria" vazio!' })
+            erros.push({ texto: 'Campo "Categoria" vazio!' });
         }
 
         if (!local || local.trim() === '') {
-            erros.push({ texto: 'Campo "Local" vazio!' })
+            erros.push({ texto: 'Campo "Local" vazio!' });
+        }
+
+        if (!capacidade || isNaN(capacidade) || capacidade <= 0) {
+            erros.push({ texto: 'A capacidade deve ser um número maior que zero!' });
         }
 
         if (erros.length > 0) {
-            return res.render('eventos/edit', { erros, evento })
+            return res.render('eventos/edit', { erros, evento });
         }
 
         const eventoAtualizado = await Evento.findByIdAndUpdate(
@@ -160,20 +183,20 @@ router.put('/edit/:id', async (req, res) => {
                 preco: preco ? parseFloat(preco) : undefined,
                 categoria,
                 local,
+                capacidade: parseInt(capacidade),
                 criador: req.user._id,
             },
             { new: true } // Retorna o documento atualizado
-        )
+        );
 
-        req.flash('success_msg', 'Evento editado com sucesso!')
-        res.redirect('/index')
-
+        req.flash('success_msg', 'Evento editado com sucesso!');
+        res.redirect('/index');
 
     } catch (error) {
-        req.flash('error_msg', 'Erro ao editar evento, tente novamente!')
-        res.redirect('/index')
+        req.flash('error_msg', 'Erro ao editar evento, tente novamente!');
+        res.redirect('/index');
     }
-})
+});
 
 router.delete('/delete/:id', verificarAutenticado, async (req, res) => {
     try {
@@ -245,6 +268,19 @@ router.post('/inscrever/:id', verificarAutenticado, async (req, res) => {
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'Erro ao processar a inscrição!');
+        res.redirect('/index');
+    }
+});
+
+router.get('/proximos', async (req, res) => {
+    try {
+        const hoje = new Date();
+        const proximosEventos = await Evento.find({ data: { $gte: hoje } }).populate('criador', 'nomeDeUsuario');
+
+        res.render('eventos/proxeventos', { proximosEventos });
+    } catch (error) {
+        console.error("Erro ao buscar eventos:", error);
+        req.flash('error_msg', 'Erro ao carregar eventos.');
         res.redirect('/index');
     }
 });

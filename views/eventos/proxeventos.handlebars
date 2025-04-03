@@ -1,0 +1,28 @@
+<div class="d-flex justify-content-center">
+    <div class="col-md-3" id="proximosEventos">
+        <h2 class="text-center">Próximos Eventos:</h2>
+        <div class="list-group">
+            {{#each proximosEventos}}
+                <div class="list-group-item list-group-item-action border p-3 mb-2">
+                    <h5>{{this.titulo}}</h5>
+                    <p>{{this.descricao}}</p>
+                    <p><strong>Data:</strong> {{formatarData this.data "DD/MM/YYYY"}}</p>
+                    <p><strong>Inscritos:</strong> {{this.inscritos.length}}/{{this.capacidade}}</p>
+                    <p><strong>Preço:</strong> {{formatarMoeda this.preco }}</p>
+                    <p>Criado por: {{this.criador.nomeDeUsuario}}</p>
+                    <form action="/eventos/inscrever/{{this._id}}" method="POST">
+                        <input type="hidden" name="eventoId" value="{{this._id}}">
+                        {{#if estaInscrito}}
+                            <button class="btn btn-warning unsubscribe-event" data-id="{{this._id}}">Desinscrever</button>
+                        {{else}}
+                            <button type="submit" class="btn btn-success btn-sm">Inscrever</button>
+                        {{/if}}
+                    </form>
+                    <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right mt-2">Ver Mais</a> <br>
+                </div>
+            {{else}}
+                <p class="text-center">Nenhum evento encontrado.</p>
+            {{/each}}
+        </div>
+    </div>
+</div>
