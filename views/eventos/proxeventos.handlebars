@@ -1,28 +1,60 @@
-<div class="d-flex justify-content-center">
-    <div class="col-md-3" id="proximosEventos">
-        <h2 class="text-center">Próximos Eventos:</h2>
-        <div class="list-group">
-            {{#each proximosEventos}}
-                <div class="list-group-item list-group-item-action border p-3 mb-2">
-                    <h5>{{this.titulo}}</h5>
-                    <p>{{this.descricao}}</p>
-                    <p><strong>Data:</strong> {{formatarData this.data "DD/MM/YYYY"}}</p>
-                    <p><strong>Inscritos:</strong> {{this.inscritos.length}}/{{this.capacidade}}</p>
-                    <p><strong>Preço:</strong> {{formatarMoeda this.preco }}</p>
-                    <p>Criado por: {{this.criador.nomeDeUsuario}}</p>
-                    <form action="/eventos/inscrever/{{this._id}}" method="POST">
-                        <input type="hidden" name="eventoId" value="{{this._id}}">
-                        {{#if estaInscrito}}
-                            <button class="btn btn-warning unsubscribe-event" data-id="{{this._id}}">Desinscrever</button>
-                        {{else}}
-                            <button type="submit" class="btn btn-success btn-sm">Inscrever</button>
-                        {{/if}}
-                    </form>
-                    <a href="/eventos/{{this.id}}" class="btn btn-primary btn-sm float-right mt-2">Ver Mais</a> <br>
-                </div>
-            {{else}}
-                <p class="text-center">Nenhum evento encontrado.</p>
-            {{/each}}
+<div class="d-flex">
+    <!-- Sidebar -->
+    <nav class="bg-dark text-white p-3 min-vh-100" style="width: 250px;">
+        <h4 class="text-center">Menu</h4>
+        <hr>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="/eventos/" class="nav-link text-white">
+                    ✅ Criar Evento
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/eventos/meuseventos" class="nav-link text-white">
+                    📅 Meus Eventos Criados
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/eventos/proximos" class="nav-link text-white">
+                    ⏳ Próximos Eventos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/eventos/eventosinscritos" class="nav-link text-white">
+                    🔜 Eventos Inscritos
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <div class="flex-grow-1 p-4">
+        <div class="container">
+            <h1 class="text-center">Próximos Eventos</h1>
+            <hr>
+            <div class="list-group">
+                {{#each proximosEventos}}
+                    <div class="list-group-item list-group-item-action border p-3 mb-2">
+                        <h5>{{this.titulo}}</h5>
+                        <p>{{this.descricao}}</p>
+                        <p><strong>Data:</strong> {{formatarData this.data "DD/MM/YYYY"}}</p>
+                        <p><strong>Inscritos:</strong> {{this.inscritos.length}}/{{this.capacidade}}</p>
+                        <p><strong>Preço:</strong> {{#if preco}}{{formatarMoeda preco}}{{else}}Gratuito{{/if}}</p>
+                        <p><strong>Criado por:</strong> {{this.criador.nomeDeUsuario}}</p>
+                        <form action="/eventos/inscrever/{{this._id}}" method="POST">
+                            <input type="hidden" name="eventoId" value="{{this._id}}">
+                            {{#if estaInscrito}}
+                                <button class="btn btn-warning unsubscribe-event" data-id="{{this._id}}">Desinscrever</button>
+                            {{else}}
+                                <button type="submit" class="btn btn-success btn-sm">Inscrever</button>
+                            {{/if}}
+                        </form>
+                        <a href="/eventos/vermais/{{this._id}}" class="btn btn-primary btn-sm float-right mt-2">Ver Mais</a> <br>
+                    </div>
+                {{else}}
+                    <p class="text-center">Nenhum evento encontrado.</p>
+                {{/each}}
+            </div>
         </div>
     </div>
 </div>

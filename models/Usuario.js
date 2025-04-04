@@ -42,6 +42,12 @@ const UsuarioDB = new mongoose.Schema({
     dataDeNascimento: {
         type: Date,
     },
+    saldo: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 10000
+    },
     eAdmin: {
         type: Boolean,
         default: false, // Por padrão, o usuário NÃO é administrador

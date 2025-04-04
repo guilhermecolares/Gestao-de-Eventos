@@ -84,7 +84,8 @@ router.post('/registro', async (req, res) => {
             telefone,
             cpf: cpfValue,
             dataDeNascimento,
-            statusDeCadastro: 'completo', // Marca como cadastro completo
+            statusDeCadastro: 'completo',
+            saldo: 0
         });
 
         // Salva o novo usuário no banco de dados
@@ -126,4 +127,33 @@ router.get('/logout', (req, res) => {
     });
 });
 
+router.post('/adicionar-saldo', async (req, res) => {
+    console.log("Usuário autenticado?", req.user);
+
+    try {
+        const { valor } = req.body;
+        const usuarioId = req.user._id;
+
+        if (!usuarioId) {
+            return res.status(401).json({ erro: "Usuário não autenticado!" });
+        }
+
+        console.log(`Usuário ID: ${usuarioId}`);
+
+        // Buscar usuário no banco de dados
+        const usuario = await Usuario.findById(usuarioId);
+        if (!usuario) {
+            return res.status(404).json({ erro: "Usuário não encontrado!" });
+        }
+
+        usuario.saldo += parseFloat(valor);
+        await usuario.save();
+
+        res.status(200).json({ mensagem: "Saldo adicionado com sucesso!", saldo: usuario.saldo });
+
+    } catch (erro) {
+        console.error("Erro ao adicionar saldo:", erro);
+        res.status(500).json({ erro: "Erro interno no servidor!" });
+    }
+});
 export default router;

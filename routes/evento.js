@@ -4,6 +4,7 @@ import Evento from '../models/Evento.js'
 import { eADM } from '../helpers/eAdmin.js'
 import verificarAutenticado from '../helpers/vefAuth.js'
 import Categoria from '../models/Categoria.js'
+import Usuario from '../models/Usuario.js'
 import ExpressHandlebars from 'express-handlebars'
 import Handlebars from 'handlebars'
 
@@ -12,15 +13,26 @@ const router = express.Router()
 
 Handlebars.registerHelper('eq', function (a, b) {
     return a === b;
-});
+})
 
 Handlebars.registerHelper('formatarData', (data) => {
     return data.toLocaleDateString('pt-BR');
-});
+})
 
 Handlebars.registerHelper('formatarMoeda', function (value) {
     return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-});
+})
+
+Handlebars.registerHelper('formatarData', (data) => {
+    if (!data) return "Data não disponível";
+
+    // Converter para objeto Date, caso ainda seja uma string
+    const dataObj = new Date(data);
+    
+    if (isNaN(dataObj.getTime())) return "Data inválida";
+
+    return dataObj.toLocaleDateString('pt-BR');
+})
 
 
 router.get('/', verificarAutenticado, async (req, res) => {
@@ -171,28 +183,29 @@ router.put('/edit/:id', async (req, res) => {
         }
 
         if (erros.length > 0) {
-            return res.render('eventos/edit', { erros, evento });
+            return res.render('eventos/edit', { erros, evento: req.body });
         }
 
         const eventoAtualizado = await Evento.findByIdAndUpdate(
             id,
             {
-                titulo,
+                titulo: titulo.toUpperCase(),
                 descricao,
                 data: new Date(data),
-                preco: preco ? parseFloat(preco) : undefined,
+                preco: preco ? parseFloat(preco) : 0,
                 categoria,
                 local,
                 capacidade: parseInt(capacidade),
                 criador: req.user._id,
             },
-            { new: true } // Retorna o documento atualizado
+            { new: true, runValidators: true }
         );
 
         req.flash('success_msg', 'Evento editado com sucesso!');
         res.redirect('/index');
 
     } catch (error) {
+        console.error(error);
         req.flash('error_msg', 'Erro ao editar evento, tente novamente!');
         res.redirect('/index');
     }
@@ -236,53 +249,133 @@ router.get('/eventos/:id', verificarAutenticado, async (req, res) => {
     }
 });
 
-router.post('/inscrever/:id', verificarAutenticado, async (req, res) => {
+router.post('/inscrever/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        const usuarioId = req.user.id; // Pegando o ID do usuário autenticado
+        const usuario = await Usuario.findById(req.user.id); // Obtendo usuário autenticado
+        const evento = await Evento.findById(req.params.id); // Obtendo evento
 
-        // Verifica se o ID é válido
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            req.flash('error_msg', 'ID inválido!');
+        if (!usuario || !evento) {
+            req.flash("error_msg", "Usuário ou evento não encontrado.");
             return res.redirect('/index');
         }
 
-        const evento = await Evento.findById(id);
+        // Converter valores para garantir que são números
+        usuario.saldo = Number(usuario.saldo) || 0;
+        evento.preco = Number(evento.preco) || 0;
+
+        // Se o evento for gratuito, apenas adiciona o usuário à lista de inscritos
+        if (evento.preco === 0) {
+            evento.inscritos.push(usuario._id);
+            await evento.save();
+
+            req.flash("success_msg", "Inscrição realizada com sucesso!");
+            return res.redirect('/index');
+        }
+
+        // Se o evento for pago, verifica se o usuário tem saldo suficiente
+        if (usuario.saldo >= evento.preco) {
+            usuario.saldo -= evento.preco; // Deduz o saldo
+            evento.inscritos.push(usuario._id); // Adiciona inscrição
+            await usuario.save();
+            await evento.save();
+
+            req.flash("success_msg", "Inscrição confirmada!");
+        } else {
+            req.flash("error_msg", "Saldo insuficiente para inscrição.");
+        }
+
+        res.redirect('/index');
+    } catch (error) {
+        console.error("Erro ao inscrever no evento:", error);
+        req.flash("error_msg", "Ocorreu um erro ao se inscrever no evento.");
+        res.redirect('/index');
+    }
+});
+
+router.post('/desinscrever/:id', verificarAutenticado, async (req, res) => {
+    try {
+        const usuarioId = req.user._id;
+        const evento = await Evento.findById(req.params.id);
+
+        if (!evento) {
+            req.flash('error_msg', 'Evento não encontrado.');
+            return res.redirect('/index');
+        }
+
+        // Verifica se o usuário está inscrito
+        if (!evento.inscritos.includes(usuarioId)) {
+            req.flash('error_msg', 'Você não está inscrito neste evento.');
+            return res.redirect('/index');
+        }
+
+        // Remove o usuário da lista de inscritos
+        await Evento.findByIdAndUpdate(evento._id, {
+            $pull: { inscritos: usuarioId }
+        });
+
+        // Se o evento for pago, reembolsar o saldo do usuário
+        if (evento.preco) {
+            await Usuario.findByIdAndUpdate(usuarioId, {
+                $inc: { saldo: evento.preco }
+            });
+        }
+
+        req.flash('success_msg', 'Você foi desinscrito do evento e seu saldo foi reembolsado.');
+        res.redirect('/index');
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Erro ao desinscrever do evento.');
+        res.redirect('/index');
+    }
+});
+
+router.get('/vermais/:id', verificarAutenticado, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const evento = await Evento.findById(id).populate('criador', 'nomeDeUsuario').lean();
+
         if (!evento) {
             req.flash('error_msg', 'Evento não encontrado!');
             return res.redirect('/index');
         }
 
-        // Se o usuário já estiver inscrito, remove ele
-        if (evento.inscritos.includes(usuarioId)) {
-            evento.inscritos = evento.inscritos.filter(inscrito => inscrito.toString() !== usuarioId);
-            await evento.save();
-            req.flash('success_msg', 'Você se desinscreveu do evento.');
-        } else {
-            evento.inscritos.push(usuarioId);
-            await evento.save();
-            req.flash('success_msg', 'Inscrição realizada com sucesso!');
-        }
+        const usuarioId = req.user._id.toString();
+        const estaInscrito = evento.inscritos.some(inscrito => inscrito.toString() === usuarioId);
 
-        res.redirect('/index');
-    } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'Erro ao processar a inscrição!');
+        res.render('eventos/vermais', { evento, estaInscrito });
+    } catch (error) {
+        console.error("Erro ao buscar evento:", error);
+        req.flash('error_msg', 'Erro ao carregar evento.');
         res.redirect('/index');
     }
 });
 
 router.get('/proximos', async (req, res) => {
     try {
-        const hoje = new Date();
-        const proximosEventos = await Evento.find({ data: { $gte: hoje } }).populate('criador', 'nomeDeUsuario');
+        const eventos = await Evento.find({ data: { $gte: new Date() } }).sort({ data: 1 }).lean();
+
+        const usuario = req.user;
+        const proximosEventos = eventos.map(evento => ({
+            ...evento,
+            estaInscrito: usuario ? evento.inscritos.includes(usuario._id) : false
+        }));
 
         res.render('eventos/proxeventos', { proximosEventos });
-    } catch (error) {
-        console.error("Erro ao buscar eventos:", error);
-        req.flash('error_msg', 'Erro ao carregar eventos.');
-        res.redirect('/index');
+    } catch (err) {
+        console.error('Erro ao buscar próximos eventos:', err);
+        res.status(500).send('Erro ao buscar próximos eventos');
     }
 });
+
+router.get('/eventosinscritos', verificarAutenticado, async (req, res) => {
+    try {
+        const eventosInscritos = await Evento.find({ inscritos: req.user._id }).populate('criador', 'nomeDeUsuario').lean();
+        res.render('eventos/eventosinscritos', { eventosInscritos });
+    } catch (error) {
+        console.error("Erro ao buscar eventos inscritos:", error);
+        req.flash('error_msg', 'Erro ao carregar eventos inscritos.');
+        res.redirect('/index');
+    }
+})
 
 export default router

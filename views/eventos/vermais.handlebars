@@ -1,0 +1,42 @@
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">{{evento.titulo}}</h3>
+        </div>
+        <div class="card-body">
+            <p class="lead">{{evento.descricao}}</p>
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Data:</strong> {{formatarData evento.data}}</li>
+                <li class="list-group-item"><strong>Local:</strong> {{evento.local}}</li>
+                <li class="list-group-item">
+                    <strong>Inscritos:</strong> {{evento.inscritos.length}} / {{evento.capacidade}}
+                </li>
+                <li class="list-group-item">
+                    <strong>Preço:</strong> 
+                    {{#if preco}}
+                        {{formatarMoeda evento.preco}}
+                    {{else}}
+                        Gratuito
+                    {{/if}}
+                </li>
+                <li class="list-group-item"><strong>Criado por:</strong> {{evento.criador.nomeDeUsuario}}</li>
+            </ul>
+
+            <div class="mt-3">
+                <form action="/eventos/inscrever/{{evento._id}}" method="POST">
+                    <input type="hidden" name="eventoId" value="{{evento._id}}">
+                    {{#if estaInscrito}}
+                        <button class="btn btn-warning unsubscribe-event" data-id="{{evento._id}}">Desinscrever</button>
+                    {{else}}
+                        <button type="submit" class="btn btn-success">Inscrever</button>
+                    {{/if}}
+                </form>
+            </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <a href="/index" class="btn btn-secondary">Voltar</a>
+        </div>
+    </div>
+</div>
