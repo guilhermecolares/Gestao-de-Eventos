@@ -28,24 +28,21 @@ router.get('/index', verificarAutenticacao, async (req, res) => {
         const usuario = await Usuario.findById(req.user._id).lean()
         const usuarioId = usuario._id.toString()
 
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0); // Define o horário para meia-noite do dia atual
+        const hoje = new Date()
+        hoje.setHours(0, 0, 0, 0)
 
-        // Busca eventos que o usuário já se inscreveu
         const seusEventos = await Evento.find({ inscritos: usuario._id })
             .sort({ data: 1 })
             .limit(4)
             .populate('criador', 'nomeDeUsuario')
             .lean()
 
-        // Busca todos os eventos futuros
         const proximosEventos = await Evento.find({ data: { $gte: hoje } })
             .sort({ data: 1 })
             .limit(4)
             .populate('criador', 'nomeDeUsuario')
-            .lean();
+            .lean()
 
-        // Verifica se o usuário está inscrito no evento
         proximosEventos.forEach(evento => {
             evento.estaInscrito = evento.inscritos.some(inscrito => inscrito.toString() === usuarioId)
         })

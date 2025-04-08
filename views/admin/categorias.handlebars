@@ -1,33 +1,61 @@
-<div class="container mt-5">
-        <h2 class="mb-4">Categorias</h2>
-
-        {{#if categorias}}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Nome</th>
-                        <th scope="col">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each categorias}}
-                        <tr>
-                            <td>{{this.nome}}</td>
-                            <td>
-                                <a href="/admin/categorias/edit/{{this._id}}" class="btn btn-secondary btn-sm">Editar</a>
-                                <form action="/admin/categorias/delete/{{this._id}}" method="POST" style="display:inline-block;">
-                                    <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        {{else}}
-            <div class="alert alert-info">
-                Não há categorias cadastradas.
+<div class="container-fluid min-vh-100 d-flex flex-column">
+    <div class="row flex-grow-1">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 bg-dark text-white p-3">
+            <h4 class="text-center">Painel Admin</h4>
+            <div class="d-flex justify-content-center">
+                <small class="text-secondary">Gerencie as categorias</small>
             </div>
-        {{/if}}
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/painel" class="nav-link text-white">📊 Visão Geral</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/usuarios" class="nav-link text-white">👥 Gerenciar Usuários</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/eventos" class="nav-link text-white">📅 Gerenciar Eventos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/categorias" class="nav-link text-white">📑 Categorias</a>
+                </li>
+            </ul>
+        </nav>
 
-        <a href="/admin/categorias/nova" class="btn btn-primary mb-5">Adicionar Nova Categoria</a>
+        <!-- Conteúdo Principal -->
+        <main class="col-md-9 col-lg-10 p-4">
+            <h2 class="mb-4">Categorias</h2>
+
+            {{#if categorias}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each categorias}}
+                            <tr>
+                                <td>{{this.nome}}</td>
+                                <td>
+                                    <a href="/admin/categorias/edit/{{this._id}}" class="btn btn-secondary btn-sm">Editar</a>
+                                    <form action="/admin/categorias/delete/{{this._id}}" method="POST" style="display:inline-block;">
+                                        <button type="submit" class="btn btn-danger btn-sm">Deletar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            {{else}}
+                <div class="alert alert-info">
+                    Não há categorias cadastradas.
+                </div>
+            {{/if}}
+
+            <a href="/admin/categorias/nova" class="btn btn-primary mt-3">Adicionar Nova Categoria</a>
+        </main>
     </div>
+</div>

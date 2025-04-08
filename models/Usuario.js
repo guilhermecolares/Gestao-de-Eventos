@@ -1,7 +1,6 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
 
-// Definindo o esquema do usuário
 const UsuarioDB = new mongoose.Schema({
     nomeDeUsuario: {
         type: String,
@@ -56,22 +55,19 @@ const UsuarioDB = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-});
+})
 
-// Hash da senha antes de salvar
 UsuarioDB.pre('save', async function (next) {
-    if (!this.isModified('senha')) return next();
-    const salt = await bcrypt.genSalt(10);
-    this.senha = await bcrypt.hash(this.senha, salt);
-    next();
-});
+    if (!this.isModified('senha')) return next()
+    const salt = await bcrypt.genSalt(10)
+    this.senha = await bcrypt.hash(this.senha, salt)
+    next()
+})
 
-// Método para comparar a senha
 UsuarioDB.methods.compareSenha = function (senha) {
-    return bcrypt.compare(senha, this.senha);
+    return bcrypt.compare(senha, this.senha)
 };
 
-// Criar o modelo
-const Usuario = mongoose.model('usuario', UsuarioDB);
+const Usuario = mongoose.model('usuario', UsuarioDB)
 
-export default Usuario;
+export default Usuario

@@ -13,25 +13,36 @@ import Handlebars from 'handlebars'
 const router = express.Router()
 
 Handlebars.registerHelper('eq', function (a, b) {
-    return a === b;
+    return String(a) === String(b)
 })
 
 Handlebars.registerHelper('formatarData', (data) => {
-    return data.toLocaleDateString('pt-BR');
+    return data.toLocaleDateString('pt-BR')
 })
 
 Handlebars.registerHelper('formatarMoeda', function (value) {
-    return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 })
 
 Handlebars.registerHelper('formatarData', (data) => {
-    if (!data) return "Data não disponível";
+    if (!data) return "Data não disponível"
 
-    const dataObj = new Date(data);
+    const dataObj = new Date(data)
     
-    if (isNaN(dataObj.getTime())) return "Data inválida";
+    if (isNaN(dataObj.getTime())) return "Data inválida"
 
-    return dataObj.toLocaleDateString('pt-BR');
+    return dataObj.toLocaleDateString('pt-BR')
+})
+
+Handlebars.registerHelper('formatarDataISO', (data) => {
+    if (!data) return ''
+
+    const dataObj = new Date(data)
+    const ano = dataObj.getFullYear()
+    const mes = String(dataObj.getMonth() + 1).padStart(2, '0')
+    const dia = String(dataObj.getDate()).padStart(2, '0')
+
+    return `${ano}-${mes}-${dia}`
 })
 
 
@@ -39,12 +50,12 @@ router.get('/painel', eADM, async (req, res) => {
     try {
         const totalUsuarios = await Usuario.countDocuments();
         const totalEventos = await Evento.countDocuments();
-        const eventosFuturos = await Evento.countDocuments({ data: { $gte: new Date() } });
+        const eventosFuturos = await Evento.countDocuments({ data: { $gte: new Date() } })
 
         const ultimosEventos = await Evento.find()
             .sort({ criadoEm: -1 })
             .limit(5)
-            .lean();
+            .lean()
 
         console.log('Dashboard carregado com sucesso!');
 
@@ -57,9 +68,9 @@ router.get('/painel', eADM, async (req, res) => {
         });
     } catch (error) {
         req.flash('error_msg', 'Erro ao carregar dashboard');
-        res.redirect('/');
+        res.redirect('/')
     }
-});
+})
 
 router.get('/categorias', eADM, async (req, res) => {
     const categorias = await Categoria.find().lean()
@@ -101,22 +112,22 @@ router.post('/categorias/nova', async (req, res) => {
 
 router.get('/categorias/edit/:id', eADM, async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id } = req.params
 
-        const categoria = await Categoria.findById(id).lean();
+        const categoria = await Categoria.findById(id).lean()
 
         if (!categoria) {
-            req.flash('error_msg', 'Categoria não encontrada!');
-            return res.redirect('/admin/categorias');
+            req.flash('error_msg', 'Categoria não encontrada!')
+            return res.redirect('/admin/categorias')
         }
 
-        res.render('admin/editcategorias', { categoria, hideFooter: true });
+        res.render('admin/editcategorias', { categoria, hideFooter: true })
     } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'Erro ao carregar categoria, tente novamente!');
-        res.redirect('/admin/categorias');
+        console.error(err)
+        req.flash('error_msg', 'Erro ao carregar categoria, tente novamente!')
+        res.redirect('/admin/categorias')
     }
-});
+})
 
 router.post('/categorias/edit', eADM, async (req, res) => {
     const { id, nome } = req.body
@@ -191,20 +202,20 @@ router.get('/usuarios', eADM, async (req, res) => {
 router.get('/usuarios/edit/:id', eADM, async (req, res) => {
     try {
         const { id } = req.params;
-        const usuario = await Usuario.findById(id).lean();
+        const usuario = await Usuario.findById(id).lean()
 
         if (!usuario) {
-            req.flash('error_msg', 'Usuário não encontrado!');
-            return res.redirect('/admin/usuarios');
+            req.flash('error_msg', 'Usuário não encontrado!')
+            return res.redirect('/admin/usuarios')
         }
 
         res.render('admin/editusuario', { usuario });
     } catch (error) {
-        console.error(error);
-        req.flash('error_msg', 'Erro ao carregar usuário para edição!');
-        res.redirect('/admin/usuarios');
+        console.error(error)
+        req.flash('error_msg', 'Erro ao carregar usuário para edição!')
+        res.redirect('/admin/usuarios')
     }
-});
+})
 
 router.post('/usuarios/edit/:id', eADM, async (req, res) => {
     try {
@@ -306,16 +317,16 @@ router.post('/usuarios/edit/:id', eADM, async (req, res) => {
 
 router.get('/usuarios/delete/:id', eADM, async (req, res) => {
     try {
-        const { id } = req.params;
-        await Usuario.findByIdAndDelete(id);
-        req.flash('success_msg', 'Usuário removido com sucesso!');
-        res.redirect('/admin/usuarios');
+        const { id } = req.params
+        await Usuario.findByIdAndDelete(id)
+        req.flash('success_msg', 'Usuário removido com sucesso!')
+        res.redirect('/admin/usuarios')
     } catch (error) {
-        console.error(error);
-        req.flash('error_msg', 'Erro ao remover usuário, tente novamente!');
-        res.redirect('/admin/usuarios');
+        console.error(error)
+        req.flash('error_msg', 'Erro ao remover usuário, tente novamente!')
+        res.redirect('/admin/usuarios')
     }
-});
+})
 
 router.get('/eventos', eADM, async (req, res) => {
     try {
@@ -323,14 +334,135 @@ router.get('/eventos', eADM, async (req, res) => {
             .populate('criador', 'nomeDeUsuario')
             .populate('categoria', 'nome')
             .sort({ data: 1 })
-            .lean();
+            .lean()
 
-        res.render('admin/eventos', { eventos });
+        res.render('admin/eventos', { eventos })
     } catch (error) {
-        console.error('Erro ao buscar eventos para admin:', error);
-        req.flash('error_msg', 'Erro ao carregar eventos.');
-        res.redirect('/index');
+        console.error('Erro ao buscar eventos para admin:', error)
+        req.flash('error_msg', 'Erro ao carregar eventos.')
+        res.redirect('/index')
     }
-});
+})
+
+router.get('/eventos/add', eADM, async (req, res) => {
+    try {
+        const categorias = await Categoria.find().lean()
+        res.render('eventos/addeventos', { categorias })
+    } catch (error) {
+        console.error('Erro ao buscar categorias para admin:', error)
+        req.flash('error_msg', 'Erro ao carregar categorias.')
+        res.redirect('/admin/eventos')
+    }
+})
+
+router.post('/eventos/add', eADM, async (req, res) => {
+    const { titulo, descricao, data, preco, categoria, local, capacidade } = req.body
+
+    let erros = []
+
+    if (!titulo || titulo.trim() === '') {
+        erros.push({ texto: 'Campo "Título" vazio!' })
+    }
+    if (!data) {
+        erros.push({ texto: 'Campo "Data" é obrigatório!' })
+    }
+    if (preco && isNaN(preco)) {
+        erros.push({ texto: 'O preço deve ser um número válido!' })
+    }
+    if (!capacidade || isNaN(capacidade) || capacidade <= 0) {
+        erros.push({ texto: 'A capacidade deve ser um número maior que zero!' })
+    }
+
+    if (erros.length > 0) {
+        const categorias = await Categoria.find().lean()
+        return res.render('eventos/addeventos', { erros, titulo, descricao, data, preco, categoria, local, capacidade, categorias
+        })
+    }
+
+    try {
+        const novoEvento = new Evento({
+            titulo,
+            descricao,
+            data: new Date(data),
+            preco: preco ? parseFloat(preco) : undefined,
+            categoria,
+            local,
+            capacidade: parseInt(capacidade),
+            criador: req.user._id
+        })
+
+        await novoEvento.save()
+
+        req.flash('success_msg', 'Evento criado com sucesso!')
+        res.redirect('/admin/eventos')
+    } catch (err) {
+        console.error("Erro ao salvar evento:", err)
+        req.flash('error_msg', 'Erro ao criar evento, tente novamente!')
+        res.redirect('/admin/eventos')
+    }
+})
+
+router.get('/eventos/edit/:id', eADM, async (req, res) => {
+    try {
+        const { id } = req.params
+        const evento = await Evento.findById(id).lean()
+        const categorias = await Categoria.find().lean()
+
+        if (!evento) {
+            req.flash('error_msg', 'Evento nao encontrado, tente novamente!')
+            return res.redirect('/admin/eventos')
+        }
+
+        res.render('eventos/editeventos', { evento, categorias }) 
+    } catch (error) {
+        console.error('Erro ao buscar evento para admin:', error)
+        req.flash('error_msg', 'Erro ao carregar evento.')
+        res.redirect('/admin/eventos')
+    }
+})
+
+router.post('/eventos/edit', eADM, async (req, res) => {
+    try {
+        const evento = await Evento.findById(req.body.id)
+
+        if (!evento) {
+            req.flash('error_msg', 'Evento não encontrado.')
+            return res.redirect('/admin/eventos')
+        }
+
+        // Atualiza os dados do evento
+        evento.titulo = req.body.titulo
+        evento.descricao = req.body.descricao
+        evento.data = req.body.data
+        evento.local = req.body.local
+        evento.categoria = req.body.categoria
+        evento.capacidade = Number(req.body.capacidade)
+        evento.preco = Number(req.body.preco)
+        evento.atualizadoEm = new Date()
+
+        evento.slug = evento.titulo.toLowerCase().replace(/\s+/g, '-')
+
+        await evento.save();
+
+        req.flash('success_msg', 'Evento atualizado com sucesso!')
+        res.redirect('/admin/eventos')
+    } catch (err) {
+        console.error('Erro ao atualizar evento:', err)
+        req.flash('error_msg', 'Erro ao atualizar o evento.')
+        res.redirect('/admin/eventos')
+    }
+})
+
+router.delete('/eventos/delete/:id', eADM, async (req, res) => {
+    try {
+        await Evento.findByIdAndDelete(req.params.id)
+        req.flash('success_msg', 'Evento deletado com sucesso!')
+        res.redirect('/admin/eventos')
+    } catch (err) {
+        console.error('Erro ao deletar evento:', err)
+        req.flash('error_msg', 'Erro ao deletar evento.')
+        res.redirect('/admin/eventos')
+    }
+})
 
 export default router

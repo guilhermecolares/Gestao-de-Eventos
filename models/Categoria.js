@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
-import slugify from "slugify";
-const Schema = mongoose.Schema;
+import mongoose from "mongoose"
+import slugify from "slugify"
+const Schema = mongoose.Schema
 
 const CategoriaEvento = new Schema({
     nome: {

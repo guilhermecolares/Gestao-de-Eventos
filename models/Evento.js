@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
-import slugify from "slugify";
-const Schema = mongoose.Schema;
+import mongoose from "mongoose"
+import slugify from "slugify"
+
+const Schema = mongoose.Schema
 
 const Evento = new Schema({
     titulo: {
@@ -63,11 +64,11 @@ const Evento = new Schema({
 })
 
 Evento.pre('save', function (next) {
-    this.atualizadoEm = Date.now();
+    this.atualizadoEm = Date.now()
     if (!this.slug || this.isModified('titulo') || this.isNew) {
-        this.slug = slugify(this.titulo, { lower: true, strict: true });
+        this.slug = slugify(this.titulo, { lower: true, strict: true })
     }
-    next();
-});
+    next()
+})
 
 export default mongoose.model('evento', Evento)
