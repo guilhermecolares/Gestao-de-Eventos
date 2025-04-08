@@ -50,7 +50,7 @@ const UsuarioDB = new mongoose.Schema({
     },
     eAdmin: {
         type: Boolean,
-        default: false, // Por padrão, o usuário NÃO é administrador
+        default: false,
     },
     createdAt: {
         type: Date,

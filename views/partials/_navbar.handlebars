@@ -9,13 +9,16 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/index">Home</a>
         </li>
+        {{#if user.eAdmin}}
+        <li class="nav-item"><a class="nav-link" href="/admin/painel">Painel Admin</a></li>
+        {{/if}}
         <li class="nav-item">
           <a class="nav-link text-danger" href="/usuarios/logout">Logout</a>
         </li>
       </ul>
 
       {{#if exibirSaldo}}
-<!-- Saldo dentro da navbar -->
+
 <div class="d-flex align-items-center text-white">
   <span class="me-2">💰 Saldo: R$ <span id="saldo">{{saldo}}</span></span>
   <button id="toggleSaldoForm" class="btn btn-sm btn-success">+</button>
@@ -25,7 +28,6 @@
   </div>
 </nav>
 
-<!-- Caixa para adicionar saldo (escondida por padrão) -->
 {{#if exibirSaldo}}
 <div id="saldoForm" class="bg-dark text-white p-3 rounded shadow-sm position-absolute end-0 mt-2 me-4" style="display: none; width: 220px; z-index: 1050;">
   <form id="formAdicionarSaldo">

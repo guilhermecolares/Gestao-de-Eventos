@@ -1,0 +1,75 @@
+<div class="container-fluid min-vh-100 d-flex flex-column">
+    <div class="row flex-grow-1">
+        <nav class="col-md-3 col-lg-2 bg-dark text-white p-3">
+            <h4 class="text-center">Painel Admin</h4>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/painel" class="nav-link text-white">📊 Visão Geral</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/usuarios" class="nav-link text-white">👥 Gerenciar Usuários</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/eventos" class="nav-link text-white">📅 Gerenciar Eventos</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin/categorias" class="nav-link text-white">📑 Categorias</a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="col-md-9 col-lg-10 p-4">
+            <h2>Bem-vindo, Admin {{user.nomeDeUsuario}}!</h2>
+            <p class="text-muted">Aqui está o resumo do sistema.</p>
+
+            <div class="row my-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Total de Usuários</h5>
+                            <p class="card-text fs-4">{{totalUsuarios}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Total de Eventos</h5>
+                            <p class="card-text fs-4">{{totalEventos}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h5 class="card-title">Eventos Futuros</h5>
+                            <p class="card-text fs-4">{{eventosFuturos}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    Últimos Eventos Criados
+                </div>
+                <ul class="list-group list-group-flush">
+                    {{#each ultimosEventos}}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{this.titulo}}</strong> - {{formatarData this.data}}
+                            </div>
+                            <a href="/eventos/vermais/{{this._id}}" class="btn btn-sm btn-outline-primary">Ver</a>
+                        </li>
+                    {{else}}
+                        <li class="list-group-item">Nenhum evento recente.</li>
+                    {{/each}}
+                </ul>
+            </div>
+        </main>
+    </div>
+</div>

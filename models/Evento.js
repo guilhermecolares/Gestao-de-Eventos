@@ -29,7 +29,7 @@ const Evento = new Schema({
     },
     categoria: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'categorias',
+        ref: 'categoria',
         required: true
     },
     slug: {

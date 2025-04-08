@@ -1,6 +1,7 @@
 import express from 'express'
 import usuario from './usuario.js'
 import evento from './evento.js'
+import admin from './admin.js'
 import Usuario from '../models/Usuario.js'
 import Evento from '../models/Evento.js'
 import verificarAutenticacao  from '../helpers/vefAuth.js'
@@ -14,6 +15,9 @@ router.use('/usuarios', usuario)
 
 // Rotas de evento
 router.use('/eventos', evento)
+
+// Rotas de admin
+router.use('/admin', admin)
 
 router.get('/', (req, res) => {
     res.redirect('/index')
